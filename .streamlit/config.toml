@@ -1,0 +1,16 @@
+
+[theme]
+# Tema Claro
+base="light"
+backgroundColor="#f5f7fa"
+secondaryBackgroundColor="#e0e0e0"
+textColor="#26272E"
+primaryColor="#4CAF50" # Um verde para botões e elementos interativos
+
+# Tema Escuro (tons de azul escuro, cinza e preto)
+[theme.dark]
+base="dark"
+backgroundColor="#1A202C" # Azul escuro quase preto
+secondaryBackgroundColor="#2D3748" # Cinza escuro
+textColor="#E2E8F0" # Cinza claro para texto
+primaryColor="#4299E1" # Um azul vibrante para botões e elementos interativos
