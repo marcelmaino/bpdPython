@@ -1,6 +1,6 @@
 /* style.css */
 
-/* Esconde o cabeçalho do Streamlit (botões de rerun, settings, etc.) */
+/* Esconde o cabeçalho do Streamlit (botões de rerun, settings, etc.) 
 div[data-testid="stToolbar"] {
     visibility: hidden !important;
     height: 0 !important;
@@ -9,7 +9,7 @@ div[data-testid="stToolbar"] {
 .stApp > header {
     display: none !important;
 }
-
+*/
 .streamlit-wide {
     background-color: #f5f7fa !important;
 }
