@@ -1,6 +1,8 @@
 import streamlit as st
 import os
 import pandas as pd
+
+__version__ = "1.0.0" # Versão inicial do aplicativo
 from database import load_data, get_db_connection
 from auth import generate_users, verify_login
 from datetime import datetime, timedelta
@@ -25,6 +27,7 @@ def show_login_screen():
     with col_logo_center:
         st.markdown("""<svg style='width: 50px; height: 50px; display: block; margin: auto;' id="Camada_2" data-name="Camada 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 143.7 179.94">  <defs>    <style>      .cls-1 {        fill: #0273a4;      }    </style>  </defs>  <g id="Camada_1-2" data-name="Camada 1">    <g>      <path class="cls-1" d="M25.71,129.08v-15.46l53.21-20.31,26.22-10.28c21.85-10.8,33.42-25.45,33.42-43.7C138.56,13.37,117.22,0,80.2,0H0v129.08h25.71ZM25.71,21.34h54.5c21.59,0,31.62,6.43,31.62,20.05s-9,21.59-29.82,29.31l-56.3,21.08V21.34Z"/>      <g>        <polygon points="108.36 81.36 108.36 81.36 108.36 81.36 108.36 81.36"/>        <path d="M105.14,83.03l-26.22,10.28,7.71,4.63c20.82,12.6,30.33,20.82,30.33,35.22,0,16.71-11.31,25.45-33.42,25.45H0v21.34h83.55c38.82,0,60.15-16.45,60.15-45.24,0-22.11-9.77-35.22-38.56-51.67Z"/>      </g>    </g>  </g></svg>""", unsafe_allow_html=True) # Centraliza o logo na tela de login
     st.markdown("<p style='text-align: center;'>Por favor, faça o login para continuar.</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: center; font-size: small;'>Versão: {__version__}</p>", unsafe_allow_html=True)
 
     col_left, col_center, col_right = st.columns([1, 2, 1]) # Ajusta as colunas para centralizar o formulário
     with col_center:
@@ -144,7 +147,10 @@ def show_main_dashboard():
 
     # --- Sidebar ---
     with st.sidebar:
-        st.image(os.path.join(os.path.dirname(__file__), "logo.webp"), width=50)  # Logo com largura de 50px
+        try:
+            st.image(os.path.join(os.path.dirname(__file__), "logo.webp"), width=50)  # Logo com largura de 50px
+        except Exception as e:
+            st.error(f"Erro ao carregar a imagem: {e}. Verifique se 'logo.webp' está no diretório correto e acessível.")
 
         # Definição das opções do menu
         if st.session_state['user_role'] == 'admin':
