@@ -26,3 +26,7 @@ wheels/
 # IDE / Editor specific
 .idea/
 .vscode/
+
+# Secrets
+secrets.toml
+.streamlit/secrets.toml
