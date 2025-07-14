@@ -1,0 +1,220 @@
+## Documento de Desenvolvimento: Dashboard de Poker - Resumo das Ações e Soluções
+
+**Data:** 11 de julho de 2025
+**Projeto:** Sistema de Dashboard para Controle de Eficiência e Gestão Financeira de Poker
+**Contexto:** Este documento detalha as ações realizadas, os problemas encontrados e as soluções implementadas durante a fase inicial de desenvolvimento do Dashboard de Poker, focando na conexão com o banco de dados e na autenticação.
+
+---
+
+### 1. Introdução
+
+O objetivo deste projeto é construir um Dashboard de Poker utilizando Streamlit, Python e MySQL. As ações iniciais focaram em estabelecer a comunicação com o banco de dados e implementar o sistema de autenticação, conforme delineado no `plano_de_desenvolvimento.txt`.
+
+---
+
+### 2. Configuração Inicial e Dependências
+
+O projeto foi iniciado com a seguinte estrutura de arquivos e dependências:
+
+*   `app.py`: Arquivo principal do Streamlit.
+*   `database.py`: Módulo para interação com o banco de dados.
+*   `auth.py`: Módulo para lógica de autenticação.
+*   `requirements.txt`: Contém `streamlit`, `mysql-connector-python`, `pandas`, `numpy`.
+*   `.streamlit/secrets.toml`: Para credenciais seguras do MySQL.
+
+**Problema Inicial:** O comando `streamlit` e `pip` não eram reconhecidos.
+**Solução:** Foi necessário utilizar `python -m pip install -r requirements.txt` e `python -m streamlit run app.py` para garantir que os módulos fossem executados corretamente via o interpretador Python.
+
+---
+
+### 3. Fase 1: Camada de Dados e Backend Core (`database.py`)
+
+O módulo `database.py` é responsável por conectar ao MySQL e carregar os dados da tabela `bpd` para um DataFrame Pandas.
+
+#### Problemas e Soluções:
+
+1.  **Erro `ERR_CONNECTION_REFUSED` no navegador:**
+    *   **Causa:** Inicialmente, parecia ser um problema de conexão, mas testes isolados revelaram que o Streamlit estava falhando após a conexão, devido a erros subsequentes no carregamento de dados.
+    *   **Solução:** A depuração avançou para identificar os erros reais no carregamento de dados.
+
+2.  **Erro `1054 (42S22): Unknown column ' <coluna>' in 'field list'`:**
+    *   **Causa:** Este foi o problema mais persistente. A query SQL estava falhando porque os nomes das colunas na tabela `bpd` no MySQL não possuíam espaços iniciais, apesar de terem sido fornecidos com espaços na descrição inicial. O comando `SHOW COLUMNS FROM bpd` também foi enganoso ao não exibir os espaços.
+    *   **Solução:** Através de um processo iterativo de teste de carregamento de colunas (modificando temporariamente `app.py` para carregar colunas uma a uma), foi confirmado que **nenhuma das colunas possui espaço inicial em seus nomes reais no banco de dados**. A query SQL foi ajustada para usar os nomes das colunas **sem espaços iniciais**, mas ainda escapados com crases (`` ` ``) para garantir compatibilidade com o MySQL.
+
+3.  **Erro `Unknown datetime string format, unable to parse: Date, at position 1`:**
+    *   **Causa:** A coluna `dia` continha valores não-data (como strings vazias `''` e a string `'Date'`) que impediam a conversão para `datetime` pelo Pandas.
+    *   **Solução:** Utilizado `errors='coerce'` na função `pd.to_datetime`. Isso faz com que valores inválidos sejam convertidos para `NaT` (Not a Time), permitindo que a conversão prossiga para as datas válidas.
+
+#### Código Final Comentado (`database.py`):
+
+```python
+import streamlit as st
+import mysql.connector
+import pandas as pd
+
+def get_db_connection():
+    """
+    Estabelece e retorna uma conexão com o banco de dados MySQL usando as credenciais do Streamlit secrets.
+    As credenciais são lidas do arquivo .streamlit/secrets.toml.
+    Em caso de erro na conexão, exibe uma mensagem de erro no Streamlit.
+    """
+    try:
+        conn = mysql.connector.connect(
+            host=st.secrets["mysql"]["host"],
+            user=st.secrets["mysql"]["user"],
+            password=st.secrets["mysql"]["password"],
+            database=st.secrets["mysql"]["database"],
+            port=st.secrets["mysql"]["port"]
+        )
+        return conn
+    except Exception as e:
+        st.error(f"Erro ao conectar ao banco de dados: {e}")
+        return None
+
+@st.cache_data(ttl=3600) # Cache por 1 hora para otimizar o carregamento de dados
+def load_data():
+    """
+    Carrega os dados da tabela 'bpd' do MySQL para um DataFrame Pandas.
+    Realiza limpeza inicial dos dados, como remover espaços dos nomes das colunas
+    e converter a coluna 'dia' para o formato datetime.
+    Em caso de erro no carregamento, exibe uma mensagem de erro e retorna um DataFrame vazio.
+    """
+    conn = get_db_connection()
+    if conn:
+        try:
+            # Query SQL para selecionar todas as colunas da tabela 'bpd'.
+            # Importante: Os nomes das colunas são usados SEM espaços iniciais,
+            # conforme validado por testes diretos no MySQL, e escapados com crases (`)
+            # para garantir que o MySQL os reconheça corretamente.
+            query = """
+            SELECT
+                `linha_id`, `dia`, `reference`, `share`, `moeda`, `upline`,
+                `club`, `playerID`, `playerName`, `agentName`, `agentId`,
+                `superAgentName`, `superagentId`, `localWins`, `localFee`,
+                `hands`, `dolarWins`, `dolarFee`, `dolarRakeback`,
+                `dolarRebate`, `realWins`, `realFee`, `realRakeback`,
+                `realRebate`, `realAgentSett`, `dolarAgentSett`,
+                `realRevShare`, `realBPFProfit`, `deal`, `rebate`
+            FROM bpd;
+            """
+            df = pd.read_sql(query, conn)
+
+            # Limpeza inicial: remover quaisquer espaços em branco dos nomes das colunas do DataFrame.
+            # Isso é crucial para que o Pandas possa acessar as colunas de forma consistente
+            # (ex: df['dia'] em vez de df[' dia']).
+            df.columns = df.columns.str.strip()
+
+            # Converter a coluna 'dia' para o formato datetime.
+            # O parâmetro 'errors="coerce"' garante que quaisquer valores que não possam ser
+            # convertidos em data (como strings vazias ou "Date") sejam transformados em NaT (Not a Time),
+            # evitando erros e permitindo que a conversão prossiga para as datas válidas.
+            df['dia'] = pd.to_datetime(df['dia'], errors='coerce')
+
+            return df
+        except Exception as e:
+            st.error(f"Erro ao carregar dados do banco de dados: {e}")
+            return pd.DataFrame() # Retorna um DataFrame vazio em caso de erro
+        finally:
+            # Garante que a conexão com o banco de dados seja sempre fechada.
+            conn.close()
+    return pd.DataFrame() # Retorna um DataFrame vazio se a conexão inicial falhar
+```
+
+---
+
+### 4. Fase 2: Autenticação e Gestão de Usuários (`auth.py`)
+
+O módulo `auth.py` lida com a geração de usuários (incluindo o admin e jogadores baseados nos dados do banco) e a verificação de credenciais.
+
+#### Problemas e Soluções:
+
+1.  **Erro `IndexError: string index out of range`:**
+    *   **Causa:** Ocorre na função `generate_users` ao tentar criar senhas para jogadores. A regra de senha (`player_name_str[0].upper()` e `player_name_str[-4:]`) falhava quando `player_name_str` era uma string vazia ou tinha menos de 4 caracteres.
+    *   **Solução:** Adicionada uma verificação para garantir que `player_name_str` não esteja vazia e tenha comprimento suficiente antes de tentar acessar seus índices. Para nomes de jogadores inválidos, uma senha padrão é atribuída.
+
+#### Código Final Comentado (`auth.py`):
+
+```python
+import pandas as pd
+
+def generate_users(df):
+    """
+    Gera um DataFrame de usuários com base nos nomes de jogadores únicos encontrados no DataFrame principal (df).
+    Adiciona um usuário administrador estático com credenciais pré-definidas.
+    Para cada jogador, uma senha é gerada com base em uma regra específica.
+    Lida com nomes de jogadores vazios ou muito curtos para evitar erros.
+    """
+    users_data = []
+
+    # Adiciona o usuário Admin estático com seu nome de usuário, senha e papel.
+    # Nota de Segurança: Em um ambiente de produção, senhas nunca devem ser armazenadas em texto plano.
+    # Elas devem ser "hasheadas" (ex: com bcrypt) para segurança.
+    users_data.append({'username': 'admin', 'password': 'adm123456', 'role': 'Admin'})
+
+    # Obtém a lista de nomes de jogadores únicos da coluna 'playerName' do DataFrame.
+    unique_players = df['playerName'].unique()
+    for player_name in unique_players:
+        # Converte o nome do jogador para string para garantir que operações de string funcionem.
+        player_name_str = str(player_name)
+
+        # Regra de geração de senha: Primeira letra do nome em maiúscula + "2025" + últimos 4 caracteres do "playerName".
+        # É crucial verificar se a string não está vazia e tem comprimento suficiente
+        # para evitar 'IndexError' ao tentar acessar índices.
+        if player_name_str and len(player_name_str) >= 4:
+            password = f"{player_name_str[0].upper()}2025{player_name_str[-4:]}"
+        else:
+            # Se o nome do jogador for vazio ou muito curto para a regra,
+            # atribui uma senha padrão. Isso evita erros e garante que todos os usuários tenham uma senha.
+            password = "DefaultPass2025" # Considerar uma lógica mais robusta para senhas padrão/inválidas.
+
+        # Adiciona os dados do usuário (nome, senha, papel) à lista.
+        users_data.append({'username': player_name_str, 'password': password, 'role': 'Jogador'})
+
+    # Converte a lista de dicionários de usuários em um DataFrame Pandas.
+    return pd.DataFrame(users_data)
+
+def verify_login(username, password, users_df):
+    """
+    Verifica as credenciais de login (nome de usuário e senha) contra o DataFrame de usuários fornecido.
+    Retorna True, o papel do usuário e o nome de usuário se as credenciais forem válidas.
+    Retorna False, None, None caso contrário.
+    """
+    # Filtra o DataFrame de usuários para encontrar uma correspondência exata de nome de usuário e senha.
+    user_found = users_df[(users_df['username'] == username) & (users_df['password'] == password)]
+
+    # Se uma correspondência for encontrada (o DataFrame filtrado não está vazio).
+    if not user_found.empty:
+        # Extrai o papel (role) e o nome de usuário do primeiro registro encontrado.
+        user_role = user_found['role'].iloc[0]
+        user_name = user_found['username'].iloc[0]
+        return True, user_role, user_name
+    # Se nenhuma correspondência for encontrada.
+    return False, None, None
+```
+
+---
+
+### 5. Técnicas de Depuração Utilizadas
+
+Durante o processo, diversas técnicas foram empregadas para diagnosticar e resolver os problemas:
+
+*   **Análise do Terminal:** Monitoramento constante das mensagens de erro e depuração no terminal onde o Streamlit estava rodando.
+*   **Testes de Conexão Isolados:** Criação de scripts Python temporários (`test_db_connection.py`) para testar a conexão com o banco de dados e inspecionar metadados (como `SHOW COLUMNS`) e resultados de queries diretamente, isolando o problema do Streamlit.
+*   **Depuração com `print`:** Inserção de `print` statements estratégicos no código (ex: para exibir a query SQL exata ou o `dtype` e valores de colunas) para entender o estado do programa em pontos críticos.
+*   **Limpeza de Cache do Streamlit:**
+    *   Reiniciar o aplicativo Streamlit (fechar e reabrir o terminal).
+    *   Limpar o cache do navegador (Ctrl+Shift+R ou aba anônima).
+    *   Remover temporariamente o decorador `@st.cache_data` para garantir que a função seja executada a cada vez.
+    *   Remover arquivos `.pyc` para forçar a recompilação dos módulos Python.
+*   **Validação Iterativa de Colunas:** Modificação temporária do `app.py` para carregar e exibir colunas do banco de dados uma a uma, permitindo identificar exatamente qual coluna estava causando o erro `Unknown column`. Esta foi a técnica mais eficaz para resolver o problema dos nomes das colunas.
+
+---
+
+### 6. Próximos Passos
+
+Com a conexão com o banco de dados e o sistema de autenticação funcionando, os próximos passos, conforme o `plano_de_desenvolvimento.txt`, incluem:
+
+*   **Fase 3: Layout do Frontend e Componentes Estáticos:** Construir a estrutura visual do dashboard, incluindo o menu lateral, header e placeholders para os componentes dinâmicos.
+*   **Fase 4: Componentes Dinâmicos e Interatividade:** Conectar os dados do backend aos componentes do frontend, tornando o dashboard totalmente funcional com filtros e cálculos.
+
+Este documento deve servir como uma base sólida para o desenvolvimento contínuo do projeto.

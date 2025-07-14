@@ -1,0 +1,92 @@
+/* style.css */
+
+/* Esconde o cabeçalho do Streamlit (botões de rerun, settings, etc.) */
+div[data-testid="stToolbar"] {
+    visibility: hidden !important;
+    height: 0 !important;
+    position: fixed !important;
+}
+.stApp > header {
+    display: none !important;
+}
+
+.streamlit-wide {
+    background-color: #f5f7fa !important;
+}
+.stForm {
+    background-color: #ffffff !important;
+}
+.stMetric {
+    padding: 17px 10px;
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid #00000030;
+}
+.stMetric div div {
+    font-size: 1.6rem !important;
+    font-weight: 900 !important;
+    color: #0273a4;
+}
+.stMetric p {
+    font-size: 0.9rem !important;
+    color: #000000;
+}
+.stExpander {
+    background-color: #ffffff !important;
+    border-radius: 10px;
+}
+.st-key-date_range_selector {
+    width: 100% !important;
+}
+/*.stSelectbox label {
+    display: none !important;
+}
+ Esconde o label principal do st.radio (o elemento vazio) */
+div[data-testid="stRadio"] > label:first-child {
+    display: none !important;
+}
+
+/* Target the radio button container */
+div[data-testid="stRadio"] > label {
+    background-color: #f0f2f6; /* Cinza claro */
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin: 5px 0;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    display: flex; /* Use flexbox for alignment */
+    align-items: center; /* Center items vertically */
+    text-align: left; /* Alinha o texto à esquerda */
+}
+/* Efeito hover */
+div[data-testid="stRadio"] > label:hover {
+    background-color: #e0e2e6;
+}
+/* Estilo para o botão de rádio selecionado */
+div[data-testid="stRadio"] > label > div > input[type="radio"]:checked + div {
+    background-color: #0273a4; /* Sua cor primária */
+    color: white;
+}
+/* Esconde o input real do radio button */
+div[data-testid="stRadio"] > label > div > input[type="radio"] {
+    display: none;
+}
+/* Esconde o círculo visual do radio button e o espaço que ele ocupa */
+div[data-testid="stRadio"] > label > div:first-child {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+/* Garante que o texto do label não tenha padding extra do radio button */
+div[data-testid="stRadio"] > label > div:nth-child(2) { /* This targets the div containing the text */
+    padding-left: 0 !important;
+}
+
+.block-container {
+    padding-top: 1em !important;
+}
+h3 {
+    font-weight: 900 !important;
+}

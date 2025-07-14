@@ -1,0 +1,191 @@
+# Plano de Desenvolvimento Detalhado: Dashboard de Poker
+
+**Projeto:** Sistema de Dashboard para Controle de Eficiência e Gestão Financeira de Poker
+**Data do Plano:** 11 de julho de 2025
+**Tecnologias Principais:** Python (Streamlit), MySQL, Tailwind CSS v4 (via injeção de CSS)
+
+---
+
+## Fase 0: Configuração do Ambiente e Estrutura do Projeto
+
+**Objetivo:** Preparar todo o ambiente de desenvolvimento, estabelecer a conexão com o banco de dados e criar a estrutura de arquivos inicial.
+
+1.  **Estrutura de Diretórios:**
+    *   Criar o diretório raiz do projeto.
+    *   Dentro dele, criar os seguintes arquivos e pastas:
+        *   `app.py`: Arquivo principal da aplicação Streamlit.
+        *   `requirements.txt`: Lista de dependências Python.
+        *   `database.py`: Módulo para gerenciar a conexão e as queries ao banco de dados.
+        *   `auth.py`: Módulo para gerenciar a autenticação e os dados dos usuários.
+        *   `utils.py`: Funções de utilidade (cálculo de datas, formatação, etc.).
+        *   `.streamlit/`: Pasta de configuração do Streamlit.
+            *   `secrets.toml`: Arquivo para armazenar as credenciais do banco de dados de forma segura.
+            *   `config.toml`: (Opcional) Para configurações gerais do Streamlit.
+
+2.  **Ambiente Virtual:**
+    *   Criar e ativar um ambiente virtual Python para isolar as dependências do projeto.
+    *   Comando: `python -m venv venv` e `source venv/bin/activate` (ou `venv\Scripts\activate` no Windows).
+
+3.  **Instalação de Dependências:**
+    *   Criar o arquivo `requirements.txt` com o seguinte conteúdo:
+        ```
+        streamlit
+        mysql-connector-python
+        pandas
+        numpy
+        ```
+    *   Instalar as dependências: `pip install -r requirements.txt`.
+
+4.  **Configuração de Credenciais (`secrets.toml`):**
+    *   Criar o arquivo `.streamlit/secrets.toml` com as informações de acesso ao MySQL para que o Streamlit possa se conectar de forma segura.
+        ```toml
+        [mysql]
+        host = "mysql465.umbler.com"
+        user = "bpd"
+        password = "WC.3cK7|tk)Ri"
+        database = "bpd"
+        port = 41890
+        ```
+
+---
+
+## Fase 1: Camada de Dados e Backend Core
+
+**Objetivo:** Estabelecer a comunicação com o banco de dados e criar as funções para carregar e processar os dados brutos.
+
+1.  **Módulo `database.py`:**
+    *   Criar uma função `get_db_connection()` que lê as credenciais do `st.secrets` e retorna um objeto de conexão MySQL.
+    *   Criar uma função `load_data()` que:
+        *   Estabelece a conexão usando `get_db_connection()`.
+        *   Executa a query `SELECT * FROM bpd;`.
+        *   **Atenção:** As colunas com espaços nos nomes (`' dia'`, `' playerName'`, etc.) devem ser tratadas corretamente, possivelmente envolvendo-as em crases (`) na query SQL.
+        *   Carrega os dados em um DataFrame Pandas.
+        *   Realiza uma limpeza inicial:
+            *   Converte a coluna `' dia'` para o formato datetime.
+            *   Remove espaços em branco dos nomes das colunas do DataFrame para facilitar a manipulação (`df.columns = df.columns.str.strip()`).
+        *   Retorna o DataFrame limpo.
+    *   Implementar cache (`@st.cache_data`) na função `load_data()` para evitar múltiplas leituras do banco de dados a cada interação no frontend.
+
+---
+
+## Fase 2: Autenticação e Gestão de Usuários
+
+**Objetivo:** Implementar o sistema de login para os dois tipos de usuários (Admin e Jogador).
+
+1.  **Módulo `auth.py`:**
+    *   Criar uma função `generate_users(df)` que recebe o DataFrame principal.
+    *   A função irá:
+        *   Extrair uma lista de jogadores únicos da coluna `playerName`.
+        *   Para cada jogador, gerar a senha padrão conforme a regra: `Primeira letra do nome em maiúscula + "2025" + últimos 4 caracteres do "playerName"`.
+        *   Armazenar isso em um dicionário ou DataFrame de usuários: `{'username': '...', 'password': '...', 'role': 'Jogador'}`.
+        *   Adicionar o usuário Admin estático: `{'username': 'admin', 'password': 'adm123456', 'role': 'Admin'}`.
+        *   **Nota de Segurança:** Em um ambiente de produção, as senhas devem ser "hasheadas" (ex: com a biblioteca `bcrypt`). Para este projeto, seguiremos a regra de texto plano conforme solicitado.
+    *   Criar uma função `verify_login(username, password, users_df)` que checa se as credenciais são válidas.
+
+2.  **Integração em `app.py`:**
+    *   Utilizar o `st.session_state` para gerenciar o estado de login do usuário (`st.session_state['logged_in']`, `st.session_state['user_role']`, `st.session_state['username']`).
+    *   Na inicialização, se o usuário não estiver logado, exibir uma tela de login com campos para usuário e senha (`st.text_input`, `st.text_input(type="password")`).
+    *   Ao clicar no botão "Login", chamar a função `verify_login`. Se for bem-sucedido, atualizar o `st.session_state` e recarregar a página para exibir o dashboard.
+
+---
+
+## Fase 3: Layout do Frontend e Componentes Estáticos
+
+**Objetivo:** Construir a estrutura visual do dashboard, incluindo o menu lateral, header e placeholders para os componentes dinâmicos.
+
+1.  **Configuração do Estilo (Tailwind/CSS):**
+    *   Em `app.py`, usar `st.set_page_config(layout="wide")` para ocupar a tela toda.
+    *   Injetar o CSS para o background:
+        ```python
+        st.markdown('<style>body { background-color: #f5f7fa; }</style>', unsafe_allow_html=True)
+        ```
+    *   Para o menu lateral customizado, será necessário injetar um bloco de CSS/HTML mais complexo via `st.markdown` para controlar a largura e a transição. Isso pode ser desafiador, pois o Streamlit não foi projetado para esse nível de customização do sidebar. Uma alternativa mais simples seria usar ícones diretamente no menu padrão do Streamlit.
+        *   **Plano A (Complexo):** Usar HTML/CSS injetado para criar um menu lateral do zero.
+        *   **Plano B (Simples):** Usar `st.sidebar` e adicionar ícones aos links. Ex: `st.sidebar.page_link("app.py", label="📊 Dashboard")`.
+
+2.  **Header:**
+    *   Usar `st.columns` para organizar os elementos do header.
+    *   **Seletor de Datas:** Implementar os widgets `st.date_input` para o intervalo personalizado e `st.selectbox` ou `st.radio` para as opções pré-definidas ("Hoje", "Semana Atual", etc.).
+    *   **Seletor de Moeda:** Usar `st.toggle` ou `st.radio` para as opções de moeda.
+    *   **Info do Usuário:** Exibir o `st.session_state['username']` e um botão de "Logout" que limpa a sessão.
+
+3.  **Layout Principal:**
+    *   Usar `st.columns(5)` para criar os 5 cards de métricas. Usar `st.metric` para exibir os valores. Inicialmente, preencher com valores estáticos.
+    *   Usar `st.expander("Filtros")` para a seção de filtros que pode ser recolhida.
+    *   Dentro do expander, adicionar os widgets de filtro: `st.text_input` para a busca global e `st.multiselect` para Clubes e Agentes. Adicionar um `st.button("Limpar Filtros")`.
+
+---
+
+## Fase 4: Componentes Dinâmicos e Interatividade
+
+**Objetivo:** Conectar os dados do backend aos componentes do frontend, tornando o dashboard totalmente funcional.
+
+1.  **Filtragem de Dados:**
+    *   Criar uma função `filter_dataframe(df)` em `app.py` que aplica todos os filtros ativos (data, moeda, busca, clube, agente) ao DataFrame principal.
+    *   O DataFrame filtrado será a fonte de dados para todos os elementos visuais.
+    *   **Lógica do Filtro de Data:**
+        *   Em `utils.py`, criar funções para calcular os intervalos de data ("Semana Atual", "Última Semana"). Lembrar que a semana começa na Segunda-feira.
+    *   **Lógica do Filtro de Usuário:** Se o `st.session_state['user_role']` for "Jogador", aplicar um filtro inicial e permanente no DataFrame para mostrar apenas os dados de `playerName == st.session_state['username']`.
+
+2.  **Atualização dos Cards:**
+    *   Calcular os valores para os 5 cards de métricas a partir do DataFrame *filtrado*.
+    *   **Total de Mãos:** `filtered_df['hands'].sum()`
+    *   **Ganhos/Taxas/Rakeback:** Somar as colunas `real...` ou `dolar...` com base no seletor de moeda.
+    *   **Balanço Final:** `Ganhos - Taxas + Rakeback`.
+    *   Usar a lógica de cores (verde/vermelho) para o balanço.
+
+3.  **Tabela de Registros:**
+    *   Exibir o DataFrame filtrado usando `st.dataframe`.
+    *   Configurar as colunas para formatação de moeda, datas, etc., usando o `column_config` do `st.dataframe`.
+    *   Esconder a coluna `linha_id`.
+    *   **Lazy Loading/Paginação:** Para otimizar a performance, implementar um sistema de paginação manual. Adicionar widgets (`st.number_input`, `st.button`) para o usuário selecionar a página, e então usar `LIMIT` e `OFFSET` na query SQL ou fatiar o DataFrame Pandas para exibir apenas um subconjunto dos dados por vez.
+
+---
+
+## Fase 5: Funcionalidades Avançadas
+
+**Objetivo:** Implementar a análise de performance por "IA" e refinar a tabela de dados.
+
+1.  **Card de Análise por IA:**
+    *   Criar um módulo `insights.py`.
+    *   Criar uma função `generate_insights(df)` que recebe o DataFrame do usuário.
+    *   Implementar lógicas de análise simples com Pandas:
+        *   `df.groupby('club')['realWins'].sum().idxmax()` para encontrar o melhor clube.
+        *   `df.groupby(df['dia'].dt.day_name())['realWins'].sum().idxmax()` para o melhor dia da semana.
+        *   Calcular a variação percentual de ganhos em relação a um período anterior.
+    *   Formatar essas descobertas em frases amigáveis e exibi-las em um `st.container` com um ícone.
+
+---
+
+## Fase 6: Responsividade e Polimento Final
+
+**Objetivo:** Garantir que o dashboard seja funcional e visualmente agradável em diferentes tamanhos de tela.
+
+1.  **CSS com Media Queries:**
+    *   Injetar um bloco `<style>` com media queries para ajustar o layout.
+    *   **Tablet:** Mudar o grid dos cards para 2x2.
+    *   **Mobile:** Fazer os cards e filtros ocuparem 100% da largura e serem exibidos em uma única coluna. O menu lateral do Streamlit já é responsivo por padrão (vira um menu hambúrguer).
+
+2.  **Polimento da UI:**
+    *   Revisar todos os textos, placeholders e ícones.
+    *   Garantir que a experiência do usuário seja fluida e intuitiva.
+    *   Verificar a consistência das cores e do estilo.
+
+---
+
+## Fase 7: Testes e Otimização
+
+**Objetivo:** Assegurar a qualidade, performance e ausência de bugs na aplicação.
+
+1.  **Testes Manuais:**
+    *   Navegar pela aplicação com o perfil de Admin e de Jogador.
+    *   Verificar se o jogador só vê seus próprios dados.
+    *   Testar todas as combinações de filtros (datas, moedas, clubes, agentes, busca).
+    *   Validar os cálculos dos cards de métrica com uma amostra de dados.
+    *   Testar a funcionalidade de "Limpar Filtros".
+    *   Verificar o login e logout.
+
+2.  **Otimização:**
+    *   Confirmar que o `@st.cache_data` está funcionando para evitar recargas desnecessárias do banco de dados.
+    *   Analisar a performance da paginação da tabela com um grande volume de dados.
+    *   Minimizar o número de recálculos feitos a cada interação.
