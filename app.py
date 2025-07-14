@@ -1,4 +1,5 @@
 import streamlit as st
+import os
 import pandas as pd
 from database import load_data, get_db_connection
 from auth import generate_users, verify_login
@@ -143,7 +144,7 @@ def show_main_dashboard():
 
     # --- Sidebar ---
     with st.sidebar:
-        st.image("logo.webp", width=50)  # Logo com largura de 50px
+        st.image(os.path.join(os.path.dirname(__file__), "logo.webp"), width=50)  # Logo com largura de 50px
 
         # Definição das opções do menu
         if st.session_state['user_role'] == 'admin':
