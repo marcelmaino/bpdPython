@@ -45,17 +45,81 @@ def display_full_table(df: pd.DataFrame, user_role: str):
         st.session_state['page_size'] = 50
 
     # --- Exibição da Tabela e Opções Adicionais ---
-    st.markdown("### Dados da Tabela")
+    # st.markdown("### Dados da Tabela")
 
-    # Botão de Download
-    csv = df_display.to_csv(index=False).encode('utf-8')
-    st.download_button(
-        label="Baixar dados como CSV",
-        data=csv,
-        file_name='dados_tabela.csv',
-        mime='text/csv',
-        help="Baixa os dados atualmente exibidos na tabela (filtrados e com colunas selecionadas) como um arquivo CSV."
-    )
+    # --- Prepare DataFrame for Export (including Totals) ---
+    df_export_with_totals = df_display.copy() # Start with the full selected data
+
+    measurable_columns = [
+        'localWins', 'localFee', 'hands',
+        'dolarWins', 'dolarFee', 'dolarRakeback', 'dolarRebate', 'dolarAgentSett',
+        'realWins', 'realFee', 'realRakeback', 'realRebate', 'realAgentSett',
+        'realRevShare', 'realBPFProfit', 'deal', 'rebate'
+    ]
+
+    columns_to_sum = [col for col in measurable_columns if col in df_display.columns and pd.api.types.is_numeric_dtype(df_display[col])]
+
+    if columns_to_sum:
+        totals_row_data = {}
+        # Initialize all columns in df_export_with_totals with empty string for the totals row
+        for col in df_export_with_totals.columns:
+            totals_row_data[col] = ""
+
+        # Populate only the measurable columns with their sums
+        for col_name in columns_to_sum:
+            total_value = df_display[col_name].sum() # Sum from df_display (before pagination)
+            totals_row_data[col_name] = total_value
+
+        # Add a label for the totals row, e.g., in the first column
+        if not df_export_with_totals.empty and df_export_with_totals.columns[0] in totals_row_data:
+            totals_row_data[df_export_with_totals.columns[0]] = "TOTAL GERAL"
+        elif not df_export_with_totals.empty:
+            # Fallback if first column is not suitable, try to find a string/object column
+            found_label_col = False
+            for col in df_export_with_totals.columns:
+                if pd.api.types.is_string_dtype(df_export_with_totals[col]) or pd.api.types.is_object_dtype(df_export_with_totals[col]):
+                    totals_row_data[col] = "TOTAL GERAL"
+                    found_label_col = True
+                    break
+            if not found_label_col and not df_export_with_totals.empty: # If no suitable column found, put in first
+                totals_row_data[df_export_with_totals.columns[0]] = "TOTAL GERAL"
+
+
+        # Convert to DataFrame and concatenate
+        totals_df = pd.DataFrame([totals_row_data])
+        df_export_with_totals = pd.concat([df_export_with_totals, totals_df], ignore_index=True)
+
+    # --- Exibição da Tabela e Opções Adicionais ---
+    # st.markdown("### Dados da Tabela")
+
+    # Botões de Download lado a lado usando colunas
+    csv = df_export_with_totals.to_csv(index=False).encode('utf-8')
+    import io
+    excel_buffer = io.BytesIO()
+    df_export_with_totals.to_excel(excel_buffer, index=False, engine='openpyxl')
+    excel_buffer.seek(0) # Volta para o início do buffer
+
+    # Cria 3 colunas, mas só usa a primeira para os botões (um ao lado do outro)
+    col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
+    with col1:
+        btn_col_csv, btn_col_xlsx = st.columns(2)
+        with btn_col_csv:
+            st.download_button(
+                label="Baixar dados como CSV",
+                data=csv,
+                file_name='dados_tabela.csv',
+                mime='text/csv',
+                help="Baixa os dados atualmente exibidos na tabela (filtrados e com colunas selecionadas) e os totais como um arquivo CSV."
+            )
+        with btn_col_xlsx:
+            st.download_button(
+                label="Baixar dados como XLSX",
+                data=excel_buffer,
+                file_name='dados_tabela.xlsx',
+                mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                help="Baixa os dados atualmente exibidos na tabela (filtrados e com colunas selecionadas) e os totais como um arquivo XLSX."
+            )
+    # col2 e col3 ficam vazias para espaçamento/estética
 
     # Define a página atual, garantindo que ela seja reiniciada se os filtros mudarem
     if 'current_page' not in st.session_state:
@@ -79,7 +143,7 @@ def display_full_table(df: pd.DataFrame, user_role: str):
     df_paginated = df_display.iloc[start_row:end_row]
 
     # Exibição da Tabela
-    st.dataframe(df_paginated, use_container_width=True, height=700)
+    st.dataframe(df_paginated, use_container_width=True, height=700, hide_index=True)
 
     # --- Controles de Paginação Visuais ---
     st.markdown("<hr style='margin: 1em 0;'>", unsafe_allow_html=True)
@@ -119,12 +183,12 @@ def display_full_table(df: pd.DataFrame, user_role: str):
         nav_cols = st.columns(5)
         
         with nav_cols[0]:
-            if st.button("⏮️", help="Primeira Página", disabled=(st.session_state['current_page'] == 1 or disable_nav)):
+            if st.button("⥂", help="Primeira Página", disabled=(st.session_state['current_page'] == 1 or disable_nav)):
                 st.session_state['current_page'] = 1
                 st.rerun()
 
         with nav_cols[1]:
-            if st.button("⬅️", help="Página Anterior", disabled=(st.session_state['current_page'] <= 1 or disable_nav)):
+            if st.button("⥆", help="Página Anterior", disabled=(st.session_state['current_page'] <= 1 or disable_nav)):
                 st.session_state['current_page'] -= 1
                 st.rerun()
 
@@ -147,12 +211,12 @@ def display_full_table(df: pd.DataFrame, user_role: str):
             )
 
         with nav_cols[3]:
-            if st.button("➡️", help="Próxima Página", disabled=(st.session_state['current_page'] >= total_pages or disable_nav)):
+            if st.button("⥅", help="Próxima Página", disabled=(st.session_state['current_page'] >= total_pages or disable_nav)):
                 st.session_state['current_page'] += 1
                 st.rerun()
 
         with nav_cols[4]:
-            if st.button("⏭️", help="Última Página", disabled=(st.session_state['current_page'] == total_pages or disable_nav)):
+            if st.button("⥃", help="Última Página", disabled=(st.session_state['current_page'] == total_pages or disable_nav)):
                 st.session_state['current_page'] = total_pages
                 st.rerun()
 

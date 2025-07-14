@@ -67,26 +67,14 @@ def show_main_dashboard():
         
     with col2:
         # 1. SETUP: Define as opções e obtém a seleção do estado da sessão
-        date_options = ("Semana Atual", "Hoje", "Última semana", "Últimos 30 dias", "Intervalo personalizado", "Mostrar tudo")
+        date_options = ("Semana Atual", "Hoje", "Última semana", "Últimos 30 dias", "Mostrar tudo")
         if 'date_range_option_index' not in st.session_state:
-            st.session_state['date_range_option_index'] = 5 # Padrão "Mostrar tudo"
-        
-        selected_option_from_state = date_options[st.session_state['date_range_option_index']]
+            st.session_state['date_range_option_index'] = 2 # Padrão "Última semana"
 
-        # 2. LAYOUT: Define as colunas com base na seleção
-        if selected_option_from_state == "Intervalo personalizado":
-            cols = st.columns([2, 3, 4, 5])
-            label_cont, select_cont, date_cont, status_cont = cols
-        else:
-            cols = st.columns([2, 3, 9])
-            label_cont, select_cont, status_cont = cols
-            date_cont = None
+        # Define as colunas para o seletor e o status
+        col_select, col_status = st.columns([5, 9])
 
-        # 3. RENDERIZAÇÃO E ATUALIZAÇÃO DE ESTADO
-        # with label_cont:
-            # st.markdown("<div style='padding-top: 8px; text-align: right;'>Selecione o intervalo:</div>", unsafe_allow_html=True)
-
-        with select_cont:
+        with col_select:
             date_range_option = st.selectbox(
                 "Intervalo",
                 date_options,
@@ -100,18 +88,7 @@ def show_main_dashboard():
         today = datetime.now().date()
         start_date, end_date = None, None
 
-        if date_range_option == "Intervalo personalizado":
-            if date_cont:
-                with date_cont:
-                    start_val = st.session_state.get('start_date', today - timedelta(days=7))
-                    end_val = st.session_state.get('end_date', today)
-                    date_range = st.date_input(
-                        "Intervalo", [start_val, end_val],
-                        key="custom_date_range", label_visibility="collapsed"
-                    )
-                    if len(date_range) == 2:
-                        start_date, end_date = date_range
-        elif date_range_option == "Semana Atual":
+        if date_range_option == "Semana Atual":
             start_date = today - timedelta(days=today.weekday())
             end_date = today
         elif date_range_option == "Hoje":
@@ -129,7 +106,7 @@ def show_main_dashboard():
         st.session_state['end_date'] = end_date
 
         # 5. EXIBIÇÃO DO STATUS
-        with status_cont:
+        with col_status:
             if start_date and end_date:
                 period_text = f"{start_date.strftime('%d/%m/%Y')} a {end_date.strftime('%d/%m/%Y')}"
             else:
@@ -147,26 +124,22 @@ def show_main_dashboard():
 
     # --- Sidebar ---
     with st.sidebar:
-        try:
-            st.image(os.path.join(os.path.dirname(__file__), "logo.webp"), width=50)  # Logo com largura de 50px
-        except Exception as e:
-            st.error(f"Erro ao carregar a imagem: {e}. Verifique se 'logo.webp' está no diretório correto e acessível.")
 
         # Definição das opções do menu
         if st.session_state['user_role'] == 'admin':
             menu_options = {
-                "Dashboard": "📊 Dashboard",
-                "Gráficos": "📈 Gráficos",
-                "Usuários": "👥 Usuários",
-                "Estatísticas": "🔢 Estatísticas",
-                "Configurações": "⚙️ Configurações"
+                "Dashboard": "Dashboard",
+                "Gráficos": "Gráficos",
+                "Usuários": "Usuários",
+                "Estatísticas": "Estatísticas",
+                "Configurações": "Configurações"
             }
         else:  # player
             menu_options = {
-                "Dashboard": "📊 Dashboard",
-                "Gráficos": "📈 Gráficos",
-                "Estatísticas": "🔢 Estatísticas",
-                "Configurações": "⚙️ Configurações"
+                "Dashboard": "Dashboard",
+                "Gráficos": "Gráficos",
+                "Estatísticas": "Estatísticas",
+                "Configurações": "Configurações"
             }
 
         # Menu padrão do Streamlit
@@ -179,11 +152,12 @@ def show_main_dashboard():
 
     # --- Conteúdo principal conforme seleção ---
     if selected_option == "Dashboard":
-        df_full = load_data(st.session_state['username'], st.session_state['user_role'], st.session_state['start_date'], st.session_state['end_date'])
-        display_metric_cards(df_full, st.session_state['selected_currencies'])
-        with st.expander("Filtros Avançados", expanded=False):
-            df_filtered_by_controls = display_filters(df_full)
-        display_full_table(df_filtered_by_controls, st.session_state['user_role'])
+        with st.spinner("Carregando informações do banco de dados..."):
+            df_full = load_data(st.session_state['username'], st.session_state['user_role'], st.session_state['start_date'], st.session_state['end_date'])
+            display_metric_cards(df_full, st.session_state['selected_currencies'])
+            with st.expander("Filtros Avançados", expanded=False):
+                df_filtered_by_controls = display_filters(df_full)
+            display_full_table(df_filtered_by_controls, st.session_state['user_role'])
     elif selected_option == "Gráficos":
         st.write("Conteúdo dos gráficos aqui...")
     elif selected_option == "Usuários":

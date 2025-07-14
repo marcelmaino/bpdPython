@@ -1,1 +1,8 @@
-comit com versao
+feat: Melhorias no Dashboard e Exportação de Dados
+
+- Remove a opção "Intervalo personalizado" para simplificar o uso.
+- Adiciona linha de totais nas exportações CSV e XLSX.
+- Remove o logo do menu lateral.
+- Adiciona `openpyxl` ao `requirements.txt`.
+- Oculta o índice da tabela na exibição.
+- Adiciona spinner de carregamento ao dashboard.
