@@ -1,8 +1,5 @@
-feat: Melhorias no Dashboard e Exportação de Dados
+feat: Otimização do Login e Refatoração de Autenticação
 
-- Remove a opção "Intervalo personalizado" para simplificar o uso.
-- Adiciona linha de totais nas exportações CSV e XLSX.
-- Remove o logo do menu lateral.
-- Adiciona `openpyxl` ao `requirements.txt`.
-- Oculta o índice da tabela na exibição.
-- Adiciona spinner de carregamento ao dashboard.
+- Otimiza o processo de login buscando apenas nomes de usuários para autenticação.
+- Refatora `auth.py` para aceitar nomes de usuários diretamente na geração de usuários.
+- Adiciona `load_user_names` em `database.py` para carregamento eficiente de nomes de usuários.

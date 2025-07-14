@@ -3,7 +3,7 @@ import os
 import pandas as pd
 
 __version__ = "1.0.0" # Versão inicial do aplicativo
-from database import load_data, get_db_connection
+from database import load_data, get_db_connection, load_user_names
 from auth import generate_users, verify_login
 from datetime import datetime, timedelta
 from table_component import display_full_table
@@ -37,12 +37,10 @@ def show_login_screen():
             submitted = st.form_submit_button("Entrar")
 
             if submitted:
-                with st.spinner("Verificando credenciais e carregando dados..."):
-                    # Carrega os dados brutos para gerar a lista de usuários
-                    # Isso só é feito no momento do login para eficiência
-                    df_raw = load_data()
-                    if not df_raw.empty:
-                        users_df = generate_users(df_raw)
+                with st.spinner("Verificando credenciais..."):
+                    player_names, agent_names = load_user_names()
+                    if player_names or agent_names:
+                        users_df = generate_users(player_names, agent_names)
                         is_logged_in, user_role, user_name = verify_login(username, password, users_df)
                         
                         if is_logged_in:
