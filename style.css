@@ -90,3 +90,51 @@ div[data-testid="stRadio"] > label > div:nth-child(2) { /* This targets the div 
 h3 {
     font-weight: 900 !important;
 }
+
+/* --- Dark Mode Styles --- */
+body[data-theme="dark"] .streamlit-wide {
+    background-color: #1E1E1E !important;
+}
+
+body[data-theme="dark"] .stForm {
+    background-color: #262626 !important;
+}
+
+body[data-theme="dark"] .stMetric {
+    background: #262626;
+    border: 1px solid #333333;
+}
+
+body[data-theme="dark"] .stMetric div div {
+    color: #0273a4; /* Mantém a cor de destaque */
+}
+
+body[data-theme="dark"] .stMetric p {
+    color: #E0E0E0;
+}
+
+body[data-theme="dark"] .stExpander {
+    background-color: #262626 !important;
+}
+
+body[data-theme="dark"] div[data-testid="stRadio"] > label {
+    background-color: #333333; /* Cinza escuro para botões de rádio */
+    color: #FAFAFA;
+}
+
+body[data-theme="dark"] div[data-testid="stRadio"] > label:hover {
+    background-color: #444444;
+}
+
+body[data-theme="dark"] div[data-testid="stRadio"] > label > div > input[type="radio"]:checked + div {
+    background-color: #0273a4; /* Mantém a cor de destaque */
+    color: white;
+}
+
+body[data-theme="dark"] h3 {
+    color: #FAFAFA !important;
+}
+
+body[data-theme="dark"] p {
+    color: #E0E0E0;
+}
