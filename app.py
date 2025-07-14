@@ -11,6 +11,8 @@ from filter_component import display_filters
 from metric_cards_component import display_metric_cards
 from config_page import display_config_page
 
+from streamlit_option_menu import option_menu
+
 # Configuração inicial da página
 st.set_page_config(layout="wide", page_title="Dashboard de Poker")
 
@@ -122,30 +124,40 @@ def show_main_dashboard():
 
     # --- Sidebar ---
     with st.sidebar:
-
         # Definição das opções do menu
         if st.session_state['user_role'] == 'admin':
-            menu_options = {
-                "Dashboard": "Dashboard",
-                "Gráficos": "Gráficos",
-                "Usuários": "Usuários",
-                "Estatísticas": "Estatísticas",
-                "Configurações": "Configurações"
-            }
+            menu_options_list = [
+                "Dashboard",
+                "Usuários",
+                "Configurações"
+            ]
+            menu_icons_list = [
+                "house",
+                "people",
+                "gear"
+            ]
         else:  # player
-            menu_options = {
-                "Dashboard": "Dashboard",
-                "Gráficos": "Gráficos",
-                "Estatísticas": "Estatísticas",
-                "Configurações": "Configurações"
-            }
+            menu_options_list = [
+                "Dashboard",
+                "Configurações"
+            ]
+            menu_icons_list = [
+                "house",
+                "gear"
+            ]
 
-        # Menu padrão do Streamlit
-        selected_option = st.radio(
-            "",
-            options=list(menu_options.keys()),
-            format_func=lambda x: menu_options[x],
-            key="sidebar_menu"
+        selected_option = option_menu(
+            menu_title=None,  # Esconde o título do menu
+            options=menu_options_list,
+            icons=menu_icons_list,
+            menu_icon="cast",  # Ícone do menu principal
+            default_index=0,  # Opção padrão selecionada
+            styles={
+                "container": {"padding": "0!important", "background-color": "#fafafa"},
+                "icon": {"color": "#0273a4", "font-size": "16px"},
+                "nav-link": {"font-size": "12px", "text-align": "left", "margin": "0px", "--hover-color": "#eee"},
+                "nav-link-selected": {"background-color": "#0273a4", "color": "white"},
+            }
         )
 
     # --- Conteúdo principal conforme seleção ---
@@ -156,12 +168,8 @@ def show_main_dashboard():
             with st.expander("Filtros Avançados", expanded=False):
                 df_filtered_by_controls = display_filters(df_full)
             display_full_table(df_filtered_by_controls, st.session_state['user_role'])
-    elif selected_option == "Gráficos":
-        st.write("Conteúdo dos gráficos aqui...")
     elif selected_option == "Usuários":
         st.write("Conteúdo de gerenciamento de usuários aqui...")
-    elif selected_option == "Estatísticas":
-        st.write("Conteúdo das estatísticas aqui...")
     elif selected_option == "Configurações":
         display_config_page()
 

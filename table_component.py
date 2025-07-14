@@ -3,36 +3,53 @@ import pandas as pd
 import numpy as np
 
 def display_full_table(df: pd.DataFrame, user_role: str):
-    st.subheader("Tabela Completa de Dados")
+    # st.subheader("Tabela Completa de Dados")
 
     if df.empty:
         st.warning("Nenhum dado disponível para exibição.")
         return
 
-    # --- Opções de Configuração da Tabela ---
-    st.write("Use as opções abaixo para configurar a exibição da tabela.")
-
     # O DataFrame filtrado é o mesmo que o original, pois a busca foi removida.
     df_filtered = df
 
-    # --- Seleção de Colunas ---
-    all_columns = df_filtered.columns.tolist()
-    
-    # Definir colunas padrão para exibição inicial
-    default_cols = ['dia', 'reference', 'club', 'playerName', 'agentName', 'localWins', 'localFee', 'hands']
-    # Garantir que as colunas padrão existam no DataFrame
-    default_cols = [col for col in default_cols if col in all_columns]
+    # --- Seleção de Colunas em Expander ---
+    with st.expander("Seleção de Colunas", expanded=False):
+        st.write("Use as opções abaixo para configurar a exibição da tabela.")
+        
+        all_columns = df_filtered.columns.tolist()
+        
+        # Definir colunas padrão para exibição inicial
+        default_cols = ['dia', 'reference', 'club', 'playerName', 'agentName', 'localWins', 'localFee', 'hands']
+        # Garantir que as colunas padrão existam no DataFrame
+        default_cols = [col for col in default_cols if col in all_columns]
 
-    selected_columns = st.multiselect(
-        "Selecionar Colunas:",
-        options=all_columns,
-        default=default_cols,
-        help="Selecione as colunas que deseja exibir na tabela."
-    )
+        # Inicializa o estado da sessão para as colunas selecionadas se não existir
+        if 'selected_columns_multiselect' not in st.session_state:
+            st.session_state['selected_columns_multiselect'] = default_cols
 
-    if not selected_columns:
-        st.warning("Por favor, selecione pelo menos uma coluna para exibir.")
-        return
+        col_select_all, col_clear_selection = st.columns([1, 5])
+
+        with col_select_all:
+            if st.button("Selecionar Todas", key="select_all_cols"):
+                st.session_state['selected_columns_multiselect'] = all_columns
+                st.rerun()
+
+        with col_clear_selection:
+            if st.button("Limpar Seleção", key="clear_all_cols"):
+                st.session_state['selected_columns_multiselect'] = []
+                st.rerun()
+
+        selected_columns = st.multiselect(
+            "Selecionar Colunas:",
+            options=all_columns,
+            default=st.session_state['selected_columns_multiselect'],
+            help="Selecione as colunas que deseja exibir na tabela.",
+            key="column_selector"
+        )
+
+        if not selected_columns:
+            st.warning("Por favor, selecione pelo menos uma coluna para exibir.")
+            return
 
     df_display = df_filtered[selected_columns]
 

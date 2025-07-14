@@ -14,3 +14,24 @@ backgroundColor="#1A202C" # Azul escuro quase preto
 secondaryBackgroundColor="#2D3748" # Cinza escuro
 textColor="#E2E8F0" # Cinza claro para texto
 primaryColor="#4299E1" # Um azul vibrante para botões e elementos interativos
+
+# Configurações para esconder o menu do desenvolvedor
+[client]
+showErrorDetails = false
+
+[browser]
+gatherUsageStats = false
+
+[server]
+enableCORS = false
+enableXsrfProtection = false
+
+[ui]
+hideTopBar = true
+
+# Configurações adicionais para esconder elementos da interface
+[global]
+developmentMode = false
+
+[theme]
+showPaddingTop = false

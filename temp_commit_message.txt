@@ -1,5 +1,4 @@
-feat: Otimização do Login e Refatoração de Autenticação
+feat: Ajusta estilo do menu lateral e adiciona GEMINI.md
 
-- Otimiza o processo de login buscando apenas nomes de usuários para autenticação.
-- Refatora `auth.py` para aceitar nomes de usuários diretamente na geração de usuários.
-- Adiciona `load_user_names` em `database.py` para carregamento eficiente de nomes de usuários.
+- Reduz o tamanho da fonte dos itens do menu lateral em `style.css`.
+- Adiciona `GEMINI.md` para registrar definições e decisões da conversa, incluindo o idioma padrão (português).

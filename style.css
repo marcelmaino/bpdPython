@@ -10,6 +10,58 @@ div[data-testid="stToolbar"] {
     display: none !important;
 }
 
+.stMain {
+    margin-top: -50px;
+    height: calc(100vh + 60px);
+}
+/* Esconde especificamente o botão de deploy */
+div[data-testid="stDeployButton"] {
+    display: none !important;
+}
+
+/* Esconde outros elementos da barra superior */
+div[data-testid="stToolbar"] > div {
+    display: none !important;
+}
+
+/* Esconde o botão de recolher o menu lateral */
+button[data-testid="baseButton-header"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* Esconde o botão de toggle da sidebar */
+div[data-testid="collapsedControl"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* Esconde o botão de hambúrguer do menu lateral */
+button[aria-label="Menu"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* Esconde qualquer botão relacionado ao menu lateral */
+button[data-testid*="header"],
+button[data-testid*="menu"],
+button[data-testid*="sidebar"],
+button[data-testid*="collapse"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* Esconde elementos que aparecem no hover */
+div[data-testid="stSidebar"] button:hover,
+div[data-testid="stSidebar"] button:focus {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
 .streamlit-wide {
     background-color: #f5f7fa !important;
 }
@@ -41,10 +93,11 @@ div[data-testid="stToolbar"] {
 .stRadio input[type="radio"] {
     display: none;
 }
-/*.stSelectbox label {
-    display: none !important;
+.nav-item a{
+    font-size: 0.5rem !important;
 }
- Esconde o label principal do st.radio (o elemento vazio) */
+
+/* Esconde o label principal do st.radio (o elemento vazio) */
 div[data-testid="stRadio"] > label:first-child {
     display: none !important;
 }
@@ -60,6 +113,7 @@ div[data-testid="stRadio"] > label {
     display: flex; /* Use flexbox for alignment */
     align-items: center; /* Center items vertically */
     text-align: left; /* Alinha o texto à esquerda */
+    font-size: 0.8rem;
 }
 /* Efeito hover */
 div[data-testid="stRadio"] > label:hover {
@@ -88,7 +142,7 @@ div[data-testid="stRadio"] > label > div:nth-child(2) { /* This targets the div 
 }
 
 .block-container {
-    padding-top: 1em !important;
+    padding-top: 65px !important;
 }
 h3 {
     font-weight: 900 !important;
@@ -123,6 +177,7 @@ body[data-theme="dark"] .stExpander {
 body[data-theme="dark"] div[data-testid="stRadio"] > label {
     background-color: #333333; /* Cinza escuro para botões de rádio */
     color: #FAFAFA;
+    font-size: 0.8rem;
 }
 
 body[data-theme="dark"] div[data-testid="stRadio"] > label:hover {
@@ -141,3 +196,17 @@ body[data-theme="dark"] h3 {
 body[data-theme="dark"] p {
     color: #E0E0E0;
 }
+
+/* Estilo para o fundo da tabela (st.dataframe) */
+div[data-testid="stDataFrame"] {
+    background-color: #FFFFFF; /* Fundo branco para o modo claro */
+    border-radius: 10px; /* Opcional: para manter a consistência com outros elementos */
+    border: 1px solid #00000030; /* Opcional: para manter a consistência */
+}
+
+body[data-theme="dark"] div[data-testid="stDataFrame"] {
+    background-color: #262626; /* Fundo escuro para o modo escuro */
+    border: 1px solid #333333;
+}
+
+

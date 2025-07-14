@@ -4,3 +4,4 @@ pandas
 numpy
 mysql-connector-repackaged
 openpyxl
+streamlit-option-menu
