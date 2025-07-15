@@ -84,7 +84,7 @@ def display_full_table(df: pd.DataFrame, user_role: str):
 
         # Populate only the measurable columns with their sums
         for col_name in columns_to_sum:
-            total_value = df_display[col_name].sum() # Sum from df_display (before pagination)
+            total_value = df_display[col_name].sum() # Sum from df_display (before pagination) - mantém total geral para exportação
             totals_row_data[col_name] = total_value
 
         # Add a label for the totals row, e.g., in the first column
@@ -160,7 +160,7 @@ def display_full_table(df: pd.DataFrame, user_role: str):
     df_paginated = df_display.iloc[start_row:end_row]
 
     # Exibição da Tabela
-    st.dataframe(df_paginated, use_container_width=True, height=700, hide_index=True)
+    st.dataframe(df_paginated, use_container_width=True, hide_index=True)
 
     # --- Controles de Paginação Visuais ---
     st.markdown("<hr style='margin: 1em 0;'>", unsafe_allow_html=True)
@@ -253,6 +253,9 @@ def display_full_table(df: pd.DataFrame, user_role: str):
     columns_to_sum = [col for col in measurable_columns if col in df_display.columns and pd.api.types.is_numeric_dtype(df_display[col])]
 
     if columns_to_sum:
+        # Seção de totais da página atual
+        st.markdown("#### 📄 Totais da Página Atual")
+        
         # Cria colunas para exibir os totais, limitando a 4 por linha para melhor visualização
         cols_per_row = 4
         num_rows = int(np.ceil(len(columns_to_sum) / cols_per_row))
@@ -263,7 +266,8 @@ def display_full_table(df: pd.DataFrame, user_role: str):
                 idx = i * cols_per_row + j
                 if idx < len(columns_to_sum):
                     col_name = columns_to_sum[idx]
-                    total_value = df_display[col_name].sum()
+                    # Calcula o total apenas dos dados da página atual
+                    total_value = df_paginated[col_name].sum()
                     
                     # Formatação para valores monetários (exemplo simples)
                     if 'dolar' in col_name.lower():
@@ -275,5 +279,29 @@ def display_full_table(df: pd.DataFrame, user_role: str):
 
                     with current_cols[j]:
                         st.metric(label=col_name, value=formatted_value)
+        
+        # Seção de totais gerais (apenas se houver paginação)
+        if st.session_state.get('page_size') != "Todas" and total_pages > 1:
+            st.markdown("#### 📊 Totais Gerais (Todos os Dados Filtrados)")
+            
+            for i in range(num_rows):
+                current_cols = st.columns(cols_per_row)
+                for j in range(cols_per_row):
+                    idx = i * cols_per_row + j
+                    if idx < len(columns_to_sum):
+                        col_name = columns_to_sum[idx]
+                        # Calcula o total de todos os dados filtrados
+                        total_value = df_display[col_name].sum()
+                        
+                        # Formatação para valores monetários (exemplo simples)
+                        if 'dolar' in col_name.lower():
+                            formatted_value = f"US$ {total_value:,.2f}"
+                        elif 'real' in col_name.lower():
+                            formatted_value = f"R$ {total_value:,.2f}"
+                        else:
+                            formatted_value = f"{total_value:,.0f}" # Para mãos, etc.
+
+                        with current_cols[j]:
+                            st.metric(label=col_name, value=formatted_value, delta=None)
     else:
         st.info("Nenhuma coluna mensurável selecionada para exibir totais.")
