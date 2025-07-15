@@ -77,6 +77,68 @@ def load_data(username: str = None, user_role: str = None, start_date: date = No
             conn.close()
     return pd.DataFrame() # Retorna um DataFrame vazio se a conexão falhar
 
+def save_user_config(username: str, config_type: str, config_value: str):
+    """
+    Salva as configurações específicas do usuário no banco de dados.
+    """
+    conn = get_db_connection()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            
+            # Cria a tabela de configurações se não existir
+            create_table_query = """
+            CREATE TABLE IF NOT EXISTS user_configs (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                username VARCHAR(255) NOT NULL,
+                config_type VARCHAR(100) NOT NULL,
+                config_value TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_user_config (username, config_type)
+            )
+            """
+            cursor.execute(create_table_query)
+            
+            # Insere ou atualiza a configuração
+            query = """
+            INSERT INTO user_configs (username, config_type, config_value) 
+            VALUES (%s, %s, %s) 
+            ON DUPLICATE KEY UPDATE config_value = %s, updated_at = CURRENT_TIMESTAMP
+            """
+            cursor.execute(query, (username, config_type, config_value, config_value))
+            conn.commit()
+            return True
+        except Exception as e:
+            st.error(f"Erro ao salvar configuração do usuário: {e}")
+            return False
+        finally:
+            conn.close()
+    return False
+
+def load_user_config(username: str, config_type: str, default_value=None):
+    """
+    Carrega uma configuração específica do usuário do banco de dados.
+    """
+    conn = get_db_connection()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            query = "SELECT config_value FROM user_configs WHERE username = %s AND config_type = %s"
+            cursor.execute(query, (username, config_type))
+            result = cursor.fetchone()
+            
+            if result:
+                return result[0]
+            else:
+                return default_value
+        except Exception as e:
+            st.error(f"Erro ao carregar configuração do usuário: {e}")
+            return default_value
+        finally:
+            conn.close()
+    return default_value
+
 def save_config(config_data):
     """
     Salva as configurações no banco de dados.
@@ -185,3 +247,117 @@ def load_user_names():
         finally:
             conn.close()
     return player_names, agent_names
+
+def get_user_info(username: str):
+    """
+    Busca informações do usuário na tabela users.
+    """
+    conn = get_db_connection()
+    if conn:
+        try:
+            cursor = conn.cursor(dictionary=True)
+            query = "SELECT username, email, password, user_type FROM users WHERE username = %s"
+            cursor.execute(query, (username,))
+            user_info = cursor.fetchone()
+            return user_info
+        except Exception as e:
+            st.error(f"Erro ao buscar informações do usuário: {e}")
+            return None
+        finally:
+            conn.close()
+    return None
+
+def update_user_password(username: str, new_password: str):
+    """
+    Atualiza a senha do usuário na tabela users.
+    """
+    conn = get_db_connection()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            query = "UPDATE users SET password = %s WHERE username = %s"
+            cursor.execute(query, (new_password, username))
+            conn.commit()
+            return cursor.rowcount > 0
+        except Exception as e:
+            st.error(f"Erro ao atualizar senha do usuário: {e}")
+            return False
+        finally:
+            conn.close()
+    return False
+
+def update_user_email(username: str, email: str):
+    """
+    Atualiza o e-mail do usuário na tabela users.
+    """
+    conn = get_db_connection()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            query = "UPDATE users SET email = %s WHERE username = %s"
+            cursor.execute(query, (email, username))
+            conn.commit()
+            return cursor.rowcount > 0
+        except Exception as e:
+            st.error(f"Erro ao atualizar e-mail do usuário: {e}")
+            return False
+        finally:
+            conn.close()
+    return False
+
+def create_user_if_not_exists(username: str, email: str = None, password: str = None, role: str = 'player'):
+    """
+    Cria um usuário na tabela users se ele não existir.
+    """
+    conn = get_db_connection()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            
+            # Verificar se o usuário já existe
+            cursor.execute("SELECT username FROM users WHERE username = %s", (username,))
+            if cursor.fetchone():
+                return True  # Usuário já existe
+            
+            # Criar novo usuário
+            query = """
+            INSERT INTO users (username, email, password, user_type) 
+            VALUES (%s, %s, %s, %s)
+            """
+            cursor.execute(query, (username, email, password, role))
+            conn.commit()
+            return True
+            
+        except Exception as e:
+            st.error(f"Erro ao criar usuário: {e}")
+            return False
+        finally:
+            conn.close()
+    return False
+
+def load_all_users():
+    """
+    Carrega todos os usuários da tabela users do banco de dados.
+    Retorna um DataFrame com username, password e user_type.
+    """
+    conn = get_db_connection()
+    if conn:
+        try:
+            cursor = conn.cursor(dictionary=True)
+            query = "SELECT username, password, user_type FROM users"
+            cursor.execute(query)
+            users = cursor.fetchall()
+            
+            # Converte para DataFrame
+            users_df = pd.DataFrame(users)
+            
+            # Mapeia user_type para role (admin -> Admin, player -> Jogador)
+            users_df['role'] = users_df['user_type'].map({'admin': 'Admin', 'player': 'Jogador'})
+            
+            return users_df
+        except Exception as e:
+            st.error(f"Erro ao carregar usuários do banco: {e}")
+            return pd.DataFrame()
+        finally:
+            conn.close()
+    return pd.DataFrame()

@@ -3,7 +3,7 @@ import os
 import pandas as pd
 
 __version__ = "1.0.0" # Versão inicial do aplicativo
-from database import load_data, get_db_connection, load_user_names
+from database import load_data, get_db_connection, load_user_names, load_user_config
 from auth import generate_users, verify_login
 from datetime import datetime, timedelta
 from table_component import display_full_table
@@ -14,7 +14,7 @@ from config_page import display_config_page
 from streamlit_option_menu import option_menu
 
 # Configuração inicial da página
-st.set_page_config(layout="wide", page_title="Dashboard de Poker")
+st.set_page_config(layout="wide", page_title="BPD - Sistema de Gestão")
 
 # Carrega o CSS externo
 with open("style.css") as f:
@@ -69,7 +69,13 @@ def show_main_dashboard():
         # 1. SETUP: Define as opções e obtém a seleção do estado da sessão
         date_options = ("Semana Atual", "Hoje", "Última semana", "Últimos 30 dias", "Mostrar tudo")
         if 'date_range_option_index' not in st.session_state:
-            st.session_state['date_range_option_index'] = 2 # Padrão "Última semana"
+            # Carrega o período padrão salvo do banco de dados
+            saved_period_index = load_user_config(st.session_state['username'], 'default_period_index', '2')
+            try:
+                default_period = int(saved_period_index)
+            except (ValueError, TypeError):
+                default_period = 2  # Fallback para "Última semana"
+            st.session_state['date_range_option_index'] = default_period
 
         # Define as colunas para o seletor e o status
         col_select, col_status = st.columns([5, 9])

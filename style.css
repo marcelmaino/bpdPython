@@ -149,7 +149,7 @@ h3 {
 }
 
 /* --- Dark Mode Styles --- */
-body[data-theme="dark"] .streamlit-wide {
+/* body[data-theme="dark"] .streamlit-wide {
     background-color: #1E1E1E !important;
 }
 
@@ -163,7 +163,7 @@ body[data-theme="dark"] .stMetric {
 }
 
 body[data-theme="dark"] .stMetric div div {
-    color: #0273a4; /* Mantém a cor de destaque */
+    color: #0273a4;
 }
 
 body[data-theme="dark"] .stMetric p {
@@ -175,7 +175,7 @@ body[data-theme="dark"] .stExpander {
 }
 
 body[data-theme="dark"] div[data-testid="stRadio"] > label {
-    background-color: #333333; /* Cinza escuro para botões de rádio */
+    background-color: #333333;
     color: #FAFAFA;
     font-size: 0.8rem;
 }
@@ -185,7 +185,7 @@ body[data-theme="dark"] div[data-testid="stRadio"] > label:hover {
 }
 
 body[data-theme="dark"] div[data-testid="stRadio"] > label > div > input[type="radio"]:checked + div {
-    background-color: #0273a4; /* Mantém a cor de destaque */
+    background-color: #0273a4;
     color: white;
 }
 
@@ -195,7 +195,7 @@ body[data-theme="dark"] h3 {
 
 body[data-theme="dark"] p {
     color: #E0E0E0;
-}
+} */
 
 /* Estilo para o fundo da tabela (st.dataframe) */
 div[data-testid="stDataFrame"] {
@@ -204,9 +204,9 @@ div[data-testid="stDataFrame"] {
     border: 1px solid #00000030; /* Opcional: para manter a consistência */
 }
 
-body[data-theme="dark"] div[data-testid="stDataFrame"] {
-    background-color: #262626; /* Fundo escuro para o modo escuro */
+/* body[data-theme="dark"] div[data-testid="stDataFrame"] {
+    background-color: #262626;
     border: 1px solid #333333;
-}
+} */
 
 
