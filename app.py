@@ -31,12 +31,15 @@ def show_login_screen():
     st.markdown("<p style='text-align: center;'>Por favor, faça o login para continuar.</p>", unsafe_allow_html=True)
     st.markdown(f"<p style='text-align: center; font-size: small;'>Versão: {__version__}</p>", unsafe_allow_html=True)
 
-    col_left, col_center, col_right = st.columns([1, 2, 1]) # Ajusta as colunas para centralizar o formulário
-    with col_center:
+    # Layout com duas colunas: Login e Instruções
+    col_login, col_instructions = st.columns([1, 1])
+    
+    with col_login:
+        st.markdown("### 🔐 Login")
         with st.form("login_form"):
             username = st.text_input("Usuário", key="login_username")
             password = st.text_input("Senha", type="password", key="login_password")
-            submitted = st.form_submit_button("Entrar")
+            submitted = st.form_submit_button("Entrar", type="primary")
 
             if submitted:
                 with st.spinner("Verificando credenciais..."):
@@ -53,6 +56,35 @@ def show_login_screen():
                             st.error("Usuário ou senha inválidos.")
                     else:
                         st.error("Não foi possível carregar os dados para verificação. Verifique a conexão com o banco.")
+    
+    with col_instructions:
+        st.markdown("### 📋 Instruções de Login")
+        
+        # Instruções para Jogadores
+        with st.expander("🎮 Jogadores", expanded=True):
+            st.markdown("""
+            **Usuário:** Seu nome completo no sistema  
+            **Senha:** Gerada automaticamente com a regra:
+            
+            `Primeira letra do nome em maiúscula + "2025" + últimos 4 caracteres do nome`
+            
+            **Exemplo:** Para o jogador "João Silva"
+            - Usuário: `João Silva`
+            - Senha: `J2025Silv`
+            
+            **Observações:**
+            - Use exatamente o nome como aparece no sistema
+            - A senha é case-sensitive (diferencia maiúsculas/minúsculas)
+            - Jogadores veem apenas seus próprios dados
+            """)
+        
+        # Dicas gerais
+        st.markdown("### 💡 Dicas")
+        st.markdown("""
+        - Se não conseguir fazer login, verifique se o nome está escrito exatamente como no sistema
+        - Em caso de dúvida sobre sua senha, entre em contato com o administrador
+        - O sistema é responsivo e funciona em dispositivos móveis
+        """)
 
 def show_main_dashboard():
     """Exibe o dashboard principal após o login."""
