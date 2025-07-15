@@ -86,6 +86,119 @@ def show_login_screen():
         - O sistema é responsivo e funciona em dispositivos móveis
         """)
 
+def display_users_page():
+    """Exibe a página de gerenciamento de usuários para administradores."""
+    st.markdown("## 👥 Gerenciamento de Usuários")
+    st.markdown("Gerencie os usuários do sistema, visualize informações e busque por usuários específicos.")
+    
+    # Carregar todos os usuários
+    with st.spinner("Carregando usuários..."):
+        users_df = load_all_users()
+    
+    if users_df.empty:
+        st.warning("Nenhum usuário encontrado no sistema.")
+        return
+    
+    # Mecanismo de busca
+    st.markdown("### 🔍 Buscar Usuários")
+    col_search1, col_search2, col_search3 = st.columns([2, 2, 1])
+    
+    with col_search1:
+        search_username = st.text_input("Buscar por nome de usuário", placeholder="Digite o nome...")
+    
+    with col_search2:
+        search_role = st.selectbox("Filtrar por tipo", ["Todos", "Admin", "Jogador"])
+    
+    with col_search3:
+        if st.button("🔍 Buscar", type="primary"):
+            st.session_state['users_search_username'] = search_username
+            st.session_state['users_search_role'] = search_role
+            st.rerun()
+    
+    # Aplicar filtros
+    filtered_df = users_df.copy()
+    
+    # Filtro por nome de usuário
+    if 'users_search_username' in st.session_state and st.session_state['users_search_username']:
+        search_term = st.session_state['users_search_username'].lower()
+        filtered_df = filtered_df[filtered_df['username'].str.lower().str.contains(search_term, na=False)]
+    
+    # Filtro por tipo de usuário
+    if 'users_search_role' in st.session_state and st.session_state['users_search_role'] != "Todos":
+        role_filter = "Admin" if st.session_state['users_search_role'] == "Admin" else "Jogador"
+        filtered_df = filtered_df[filtered_df['role'] == role_filter]
+    
+    # Estatísticas
+    col_stats1, col_stats2, col_stats3, col_stats4 = st.columns(4)
+    
+    with col_stats1:
+        st.metric("Total de Usuários", len(users_df))
+    
+    with col_stats2:
+        admin_count = len(users_df[users_df['role'] == 'Admin'])
+        st.metric("Administradores", admin_count)
+    
+    with col_stats3:
+        player_count = len(users_df[users_df['role'] == 'Jogador'])
+        st.metric("Jogadores", player_count)
+    
+    with col_stats4:
+        filtered_count = len(filtered_df)
+        st.metric("Resultados", filtered_count)
+    
+    # Tabela de usuários
+    st.markdown("### 📋 Lista de Usuários")
+    
+    if filtered_df.empty:
+        st.info("Nenhum usuário encontrado com os filtros aplicados.")
+    else:
+        # Preparar dados para exibição
+        display_df = filtered_df.copy()
+        
+        # Mapear tipos de usuário para ícones
+        display_df['Tipo'] = display_df['role'].map({
+            'Admin': '👑 Admin',
+            'Jogador': '🎮 Jogador'
+        })
+        
+        # Selecionar e renomear colunas para exibição
+        display_df = display_df[['username', 'Tipo', 'email']].rename(columns={
+            'username': 'Nome de Usuário',
+            'email': 'E-mail'
+        })
+        
+        # Preencher emails vazios
+        display_df['E-mail'] = display_df['E-mail'].fillna('Não cadastrado')
+        
+        # Exibir tabela
+        st.dataframe(
+            display_df,
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                "Nome de Usuário": st.column_config.TextColumn(
+                    "Nome de Usuário",
+                    width="medium"
+                ),
+                "Tipo": st.column_config.TextColumn(
+                    "Tipo",
+                    width="small"
+                ),
+                "E-mail": st.column_config.TextColumn(
+                    "E-mail",
+                    width="large"
+                )
+            }
+        )
+        
+        # Botão para limpar filtros
+        if st.button("🗑️ Limpar Filtros"):
+            if 'users_search_username' in st.session_state:
+                del st.session_state['users_search_username']
+            if 'users_search_role' in st.session_state:
+                del st.session_state['users_search_role']
+            st.rerun()
+
 def show_main_dashboard():
     """Exibe o dashboard principal após o login."""
     
@@ -170,7 +283,7 @@ def show_main_dashboard():
     # --- Sidebar ---
     with st.sidebar:
         # Definição das opções do menu
-        if st.session_state['user_role'] == 'admin':
+        if st.session_state['user_role'] == 'Admin':
             menu_options_list = [
                 "Dashboard",
                 "Usuários",
@@ -220,7 +333,7 @@ def show_main_dashboard():
             # Exibir tabela com dados filtrados
             display_full_table(df_filtered_by_controls, st.session_state['user_role'])
     elif selected_option == "Usuários":
-        st.write("Conteúdo de gerenciamento de usuários aqui...")
+        display_users_page()
     elif selected_option == "Configurações":
         display_config_page()
 

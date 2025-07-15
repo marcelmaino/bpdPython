@@ -338,13 +338,13 @@ def create_user_if_not_exists(username: str, email: str = None, password: str = 
 def load_all_users():
     """
     Carrega todos os usuários da tabela users do banco de dados.
-    Retorna um DataFrame com username, password e user_type.
+    Retorna um DataFrame com username, password, user_type e email.
     """
     conn = get_db_connection()
     if conn:
         try:
             cursor = conn.cursor(dictionary=True)
-            query = "SELECT username, password, user_type FROM users"
+            query = "SELECT username, password, user_type, email FROM users"
             cursor.execute(query)
             users = cursor.fetchall()
             
