@@ -50,7 +50,7 @@ def load_data(username: str = None, user_role: str = None, start_date: date = No
                 params.append(username)
             
             if start_date and end_date:
-                where_clauses.append(" dia BETWEEN %s AND %s")
+                where_clauses.append(" STR_TO_DATE(dia, '%d/%b/%y') BETWEEN %s AND %s")
                 params.append(start_date)
                 params.append(end_date)
 
@@ -63,8 +63,8 @@ def load_data(username: str = None, user_role: str = None, start_date: date = No
             # Esta linha é crucial para que o pandas possa acessar as colunas sem o espaço
             df.columns = df.columns.str.strip()
 
-            # Converter a coluna 'dia' para datetime
-            df['dia'] = pd.to_datetime(df['dia'], errors='coerce')
+            # Converter a coluna 'dia' para datetime usando o formato correto
+            df['dia'] = pd.to_datetime(df['dia'], format='%d/%b/%y', errors='coerce')
 
             # Remover linhas com datas inválidas (NaT) na coluna 'dia'
             df.dropna(subset=['dia'], inplace=True)

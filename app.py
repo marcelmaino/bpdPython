@@ -3,7 +3,7 @@ import os
 import pandas as pd
 
 __version__ = "1.0.0" # Versão inicial do aplicativo
-from database import load_data, get_db_connection, load_user_names, load_user_config
+from database import load_data, get_db_connection, load_all_users, load_user_config
 from auth import generate_users, verify_login
 from datetime import datetime, timedelta
 from table_component import display_full_table
@@ -40,9 +40,8 @@ def show_login_screen():
 
             if submitted:
                 with st.spinner("Verificando credenciais..."):
-                    player_names, agent_names = load_user_names()
-                    if player_names or agent_names:
-                        users_df = generate_users(player_names, agent_names)
+                    users_df = load_all_users()
+                    if not users_df.empty:
                         is_logged_in, user_role, user_name = verify_login(username, password, users_df)
                         
                         if is_logged_in:
@@ -88,7 +87,12 @@ def show_main_dashboard():
                 label_visibility="collapsed",
                 key="date_range_selector"
             )
-            st.session_state['date_range_option_index'] = date_options.index(date_range_option)
+            
+            # Verifica se o período foi alterado
+            current_index = date_options.index(date_range_option)
+            if current_index != st.session_state['date_range_option_index']:
+                st.session_state['date_range_option_index'] = current_index
+                st.rerun()  # Força o rerun para atualizar os dados
 
         # 4. LÓGICA DE DATAS
         today = datetime.now().date()
@@ -107,6 +111,9 @@ def show_main_dashboard():
         elif date_range_option == "Últimos 30 dias":
             start_date = today - timedelta(days=29)
             end_date = today
+        elif date_range_option == "Mostrar tudo":
+            start_date = None
+            end_date = None
 
         st.session_state['start_date'] = start_date
         st.session_state['end_date'] = end_date
@@ -170,9 +177,15 @@ def show_main_dashboard():
     if selected_option == "Dashboard":
         with st.spinner("Carregando informações do banco de dados..."):
             df_full = load_data(st.session_state['username'], st.session_state['user_role'], st.session_state['start_date'], st.session_state['end_date'])
-            display_metric_cards(df_full, st.session_state['selected_currencies'])
+            
+            # Aplicar filtros avançados primeiro
             with st.expander("Filtros Avançados", expanded=False):
                 df_filtered_by_controls = display_filters(df_full)
+            
+            # Exibir métricas com base nos dados filtrados
+            display_metric_cards(df_filtered_by_controls, st.session_state['selected_currencies'])
+            
+            # Exibir tabela com dados filtrados
             display_full_table(df_filtered_by_controls, st.session_state['user_role'])
     elif selected_option == "Usuários":
         st.write("Conteúdo de gerenciamento de usuários aqui...")
