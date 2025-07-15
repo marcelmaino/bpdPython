@@ -155,6 +155,24 @@ def display_full_table(df: pd.DataFrame, user_role: str):
     if st.session_state['current_page'] > total_pages:
         st.session_state['current_page'] = total_pages
 
+    # --- Conversão para Numérico das Colunas Mensuráveis ---
+    # Lista de colunas que devem ter seus totais exibidos
+    measurable_columns = [
+        'localWins', 'localFee', 'hands',
+        'dolarWins', 'dolarFee', 'dolarRakeback', 'dolarRebate', 'dolarAgentSett',
+        'realWins', 'realFee', 'realRakeback', 'realRebate', 'realAgentSett',
+        'realRevShare', 'realBPFProfit', 'deal', 'rebate'
+    ]
+
+    # Converte colunas mensuráveis para numérico antes da paginação
+    for col in measurable_columns:
+        if col in df_display.columns and not pd.api.types.is_numeric_dtype(df_display[col]):
+            try:
+                df_display[col] = pd.to_numeric(df_display[col], errors='coerce')
+                print(f"Coluna '{col}' convertida para numérico antes da paginação")
+            except Exception as e:
+                print(f"Erro ao converter coluna '{col}': {e}")
+
     start_row = (st.session_state['current_page'] - 1) * rows_per_page
     end_row = start_row + rows_per_page
     df_paginated = df_display.iloc[start_row:end_row]
@@ -240,17 +258,11 @@ def display_full_table(df: pd.DataFrame, user_role: str):
     # --- Totais das Colunas Mensuráveis ---
     st.markdown("### Totais")
     
-    # Lista de colunas que devem ter seus totais exibidos
-    # Certifique-se de que estas colunas são numéricas no seu DataFrame
-    measurable_columns = [
-        'localWins', 'localFee', 'hands',
-        'dolarWins', 'dolarFee', 'dolarRakeback', 'dolarRebate', 'dolarAgentSett',
-        'realWins', 'realFee', 'realRakeback', 'realRebate', 'realAgentSett',
-        'realRevShare', 'realBPFProfit', 'deal', 'rebate'
-    ]
-
     # Filtra as colunas mensuráveis que estão presentes no df_display e são numéricas
     columns_to_sum = [col for col in measurable_columns if col in df_display.columns and pd.api.types.is_numeric_dtype(df_display[col])]
+    
+    print(f"Colunas para somar: {columns_to_sum}")
+    print("=============================\n")
 
     if columns_to_sum:
         # Seção de totais da página atual
@@ -269,13 +281,24 @@ def display_full_table(df: pd.DataFrame, user_role: str):
                     # Calcula o total apenas dos dados da página atual
                     total_value = df_paginated[col_name].sum()
                     
+                    # Diagnóstico específico para valores N/A
+                    print(f"DEBUG TOTAIS: Coluna '{col_name}' - Total: {total_value}")
+                    print(f"  Valores únicos na página: {df_paginated[col_name].unique()}")
+                    print(f"  Contagem de NaN: {df_paginated[col_name].isna().sum()}")
+                    print(f"  Contagem de valores válidos: {df_paginated[col_name].notna().sum()}")
+                    
                     # Formatação para valores monetários (exemplo simples)
-                    if 'dolar' in col_name.lower():
-                        formatted_value = f"US$ {total_value:,.2f}"
-                    elif 'real' in col_name.lower():
-                        formatted_value = f"R$ {total_value:,.2f}"
-                    else:
-                        formatted_value = f"{total_value:,.0f}" # Para mãos, etc.
+                    try:
+                        if pd.isna(total_value) or total_value is None:
+                            formatted_value = "N/A"
+                        elif 'dolar' in col_name.lower():
+                            formatted_value = f"US$ {total_value:,.2f}"
+                        elif 'real' in col_name.lower():
+                            formatted_value = f"R$ {total_value:,.2f}"
+                        else:
+                            formatted_value = f"{total_value:,.0f}" # Para mãos, etc.
+                    except (ValueError, TypeError):
+                        formatted_value = "N/A"
 
                     with current_cols[j]:
                         st.metric(label=col_name, value=formatted_value)
@@ -294,12 +317,17 @@ def display_full_table(df: pd.DataFrame, user_role: str):
                         total_value = df_display[col_name].sum()
                         
                         # Formatação para valores monetários (exemplo simples)
-                        if 'dolar' in col_name.lower():
-                            formatted_value = f"US$ {total_value:,.2f}"
-                        elif 'real' in col_name.lower():
-                            formatted_value = f"R$ {total_value:,.2f}"
-                        else:
-                            formatted_value = f"{total_value:,.0f}" # Para mãos, etc.
+                        try:
+                            if pd.isna(total_value) or total_value is None:
+                                formatted_value = "N/A"
+                            elif 'dolar' in col_name.lower():
+                                formatted_value = f"US$ {total_value:,.2f}"
+                            elif 'real' in col_name.lower():
+                                formatted_value = f"R$ {total_value:,.2f}"
+                            else:
+                                formatted_value = f"{total_value:,.0f}" # Para mãos, etc.
+                        except (ValueError, TypeError):
+                            formatted_value = "N/A"
 
                         with current_cols[j]:
                             st.metric(label=col_name, value=formatted_value, delta=None)

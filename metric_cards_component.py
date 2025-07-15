@@ -4,6 +4,16 @@ import pandas as pd
 def display_metric_cards(df: pd.DataFrame, selected_currencies: list):
     st.markdown("### Métricas Principais")
 
+    # Diagnóstico dos dados recebidos
+    print(f"\n=== DIAGNÓSTICO MÉTRICAS ===")
+    print(f"DataFrame recebido: {len(df)} linhas")
+    print(f"Colunas disponíveis: {list(df.columns)}")
+    print(f"Moedas selecionadas: {selected_currencies}")
+    
+    if not df.empty:
+        print("Primeiras linhas dos dados:")
+        print(df[['dia', 'playerName', 'realWins', 'dolarWins', 'hands']].head(3))
+    
     if df.empty:
         st.warning("Nenhum dado disponível para calcular as métricas.")
         return
@@ -20,26 +30,65 @@ def display_metric_cards(df: pd.DataFrame, selected_currencies: list):
     total_rebate_dolar = 0
 
     # Calcula os totais das colunas relevantes
+    print("\n=== CÁLCULOS DOS TOTAIS ===")
+    
     if 'hands' in df.columns:
         # Tratar valores inválidos na coluna hands
         hands_clean = pd.to_numeric(df['hands'], errors='coerce')
         total_hands = hands_clean.sum()
+        print(f"Total hands: {total_hands} (tipo: {type(total_hands)})")
+    else:
+        print("Coluna 'hands' não encontrada")
+        
     if 'realWins' in df.columns:
         total_wins_real = pd.to_numeric(df['realWins'], errors='coerce').sum()
+        print(f"Total realWins: {total_wins_real} (tipo: {type(total_wins_real)})")
+    else:
+        print("Coluna 'realWins' não encontrada")
+        
     if 'dolarWins' in df.columns:
         total_wins_dolar = pd.to_numeric(df['dolarWins'], errors='coerce').sum()
+        print(f"Total dolarWins: {total_wins_dolar} (tipo: {type(total_wins_dolar)})")
+    else:
+        print("Coluna 'dolarWins' não encontrada")
+        
     if 'realFee' in df.columns:
         total_fee_real = pd.to_numeric(df['realFee'], errors='coerce').sum()
+        print(f"Total realFee: {total_fee_real} (tipo: {type(total_fee_real)})")
+    else:
+        print("Coluna 'realFee' não encontrada")
+        
     if 'dolarFee' in df.columns:
         total_fee_dolar = pd.to_numeric(df['dolarFee'], errors='coerce').sum()
+        print(f"Total dolarFee: {total_fee_dolar} (tipo: {type(total_fee_dolar)})")
+    else:
+        print("Coluna 'dolarFee' não encontrada")
+        
     if 'realRakeback' in df.columns:
         total_rakeback_real = pd.to_numeric(df['realRakeback'], errors='coerce').sum()
+        print(f"Total realRakeback: {total_rakeback_real} (tipo: {type(total_rakeback_real)})")
+    else:
+        print("Coluna 'realRakeback' não encontrada")
+        
     if 'dolarRakeback' in df.columns:
         total_rakeback_dolar = pd.to_numeric(df['dolarRakeback'], errors='coerce').sum()
+        print(f"Total dolarRakeback: {total_rakeback_dolar} (tipo: {type(total_rakeback_dolar)})")
+    else:
+        print("Coluna 'dolarRakeback' não encontrada")
+        
     if 'realRebate' in df.columns:
         total_rebate_real = pd.to_numeric(df['realRebate'], errors='coerce').sum()
+        print(f"Total realRebate: {total_rebate_real} (tipo: {type(total_rebate_real)})")
+    else:
+        print("Coluna 'realRebate' não encontrada")
+        
     if 'dolarRebate' in df.columns:
         total_rebate_dolar = pd.to_numeric(df['dolarRebate'], errors='coerce').sum()
+        print(f"Total dolarRebate: {total_rebate_dolar} (tipo: {type(total_rebate_dolar)})")
+    else:
+        print("Coluna 'dolarRebate' não encontrada")
+    
+    print("=============================\n")
 
     # --- Cards de Métricas ---
     col1, col2, col3, col4, col5 = st.columns(5)
@@ -70,6 +119,9 @@ def display_metric_cards(df: pd.DataFrame, selected_currencies: list):
         else:
             formatted_wins = "N/A"
 
+        # Diagnóstico da exibição de ganhos
+        print(f"DEBUG GANHOS: wins_value={wins_value}, formatted_wins='{formatted_wins}'")
+
         st.metric(
             label=wins_label,
             value=formatted_wins,
@@ -93,6 +145,9 @@ def display_metric_cards(df: pd.DataFrame, selected_currencies: list):
             formatted_rakeback = f"US$ {rakeback_value:,.2f}"
         else:
             formatted_rakeback = "N/A"
+
+        # Diagnóstico da exibição de rakeback
+        print(f"DEBUG RAKEBACK: rakeback_value={rakeback_value}, formatted_rakeback='{formatted_rakeback}'")
 
         st.metric(
             label=rakeback_label,
