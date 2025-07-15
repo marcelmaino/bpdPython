@@ -54,13 +54,13 @@ def test_db_query_and_returned_columns():
 
             query = """
             SELECT
-                `linha_id`, ` dia`, ` reference`, ` share`, ` moeda`, ` upline`,
-                ` club`, ` playerID`, ` playerName`, ` agentName`, ` agentId`,
-                ` superAgentName`, ` superagentId`, ` localWins`, ` localFee`,
-                ` hands`, ` dolarWins`, ` dolarFee`, ` dolarRakeback`,
-                ` dolarRebate`, ` realWins`, ` realFee`, ` realRakeback`,
-                ` realRebate`, ` realAgentSett`, ` dolarAgentSett`,
-                ` realRevShare`, ` realBPFProfit`, ` deal`, ` rebate`
+                `linha_id`, `dia`, `reference`, `share`, `moeda`, `upline`,
+                `club`, `playerID`, `playerName`, `agentName`, `agentId`,
+                `superAgentName`, `superagentId`, `localWins`, `localFee`,
+                `hands`, `dolarWins`, `dolarFee`, `dolarRakeback`,
+                `dolarRebate`, `realWins`, `realFee`, `realRakeback`,
+                `realRebate`, `realAgentSett`, `dolarAgentSett`,
+                `realRevShare`, `realBPFProfit`, `deal`, `rebate`
             FROM bpd;
             """
             print(f"\nExecutando a query:\n{query}")
@@ -90,5 +90,181 @@ def test_db_query_and_returned_columns():
             conn.close()
             print("Conexão fechada.")
 
+def show_bpd_count_and_sample():
+    import mysql.connector
+    conn = None
+    try:
+        conn = mysql.connector.connect(
+            host=st.secrets["mysql"]["host"],
+            user=st.secrets["mysql"]["user"],
+            password=st.secrets["mysql"]["password"],
+            database=st.secrets["mysql"]["database"],
+            port=st.secrets["mysql"]["port"]
+        )
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM bpd")
+        count = cursor.fetchone()[0]
+        print(f"\nTotal de linhas na tabela bpd: {count}")
+        if count > 0:
+            cursor.execute("SELECT * FROM bpd LIMIT 5")
+            rows = cursor.fetchall()
+            columns = [desc[0] for desc in cursor.description]
+            print("\nPrimeiras linhas:")
+            print(columns)
+            for row in rows:
+                print(row)
+        cursor.close()
+    except Exception as e:
+        print(f"Erro ao consultar tabela bpd: {e}")
+    finally:
+        if conn:
+            conn.close()
+
+def check_date_range():
+    import mysql.connector
+    from datetime import datetime, timedelta
+    conn = None
+    try:
+        conn = mysql.connector.connect(
+            host=st.secrets["mysql"]["host"],
+            user=st.secrets["mysql"]["user"],
+            password=st.secrets["mysql"]["password"],
+            database=st.secrets["mysql"]["database"],
+            port=st.secrets["mysql"]["port"]
+        )
+        cursor = conn.cursor()
+        
+        # Verificar datas mínimas e máximas
+        cursor.execute("SELECT MIN(dia), MAX(dia) FROM bpd")
+        min_date, max_date = cursor.fetchone()
+        print(f"\nDatas no banco:")
+        print(f"Data mínima: {min_date}")
+        print(f"Data máxima: {max_date}")
+        
+        # Verificar dados dos últimos 30 dias
+        today = datetime.now().date()
+        thirty_days_ago = today - timedelta(days=29)
+        print(f"\nÚltimos 30 dias: {thirty_days_ago} até {today}")
+        
+        cursor.execute("SELECT COUNT(*) FROM bpd WHERE dia BETWEEN %s AND %s", (thirty_days_ago, today))
+        count_30_days = cursor.fetchone()[0]
+        print(f"Dados nos últimos 30 dias: {count_30_days} linhas")
+        
+        if count_30_days > 0:
+            cursor.execute("SELECT DISTINCT dia FROM bpd WHERE dia BETWEEN %s AND %s ORDER BY dia DESC LIMIT 10", (thirty_days_ago, today))
+            recent_dates = cursor.fetchall()
+            print("Datas recentes encontradas:")
+            for date in recent_dates:
+                print(f"  - {date[0]}")
+        
+        # Verificar dados da última semana
+        end_of_last_week = today - timedelta(days=today.weekday() + 1)
+        start_of_last_week = end_of_last_week - timedelta(days=6)
+        print(f"\nÚltima semana: {start_of_last_week} até {end_of_last_week}")
+        
+        cursor.execute("SELECT COUNT(*) FROM bpd WHERE dia BETWEEN %s AND %s", (start_of_last_week, end_of_last_week))
+        count_last_week = cursor.fetchone()[0]
+        print(f"Dados na última semana: {count_last_week} linhas")
+        
+        if count_last_week > 0:
+            cursor.execute("SELECT DISTINCT dia FROM bpd WHERE dia BETWEEN %s AND %s ORDER BY dia", (start_of_last_week, end_of_last_week))
+            week_dates = cursor.fetchall()
+            print("Datas da última semana:")
+            for date in week_dates:
+                print(f"  - {date[0]}")
+        
+        cursor.close()
+    except Exception as e:
+        print(f"Erro ao verificar datas: {e}")
+    finally:
+        if conn:
+            conn.close()
+
+def check_column_type_and_test_filters():
+    import mysql.connector
+    from datetime import datetime, timedelta
+    conn = None
+    try:
+        conn = mysql.connector.connect(
+            host=st.secrets["mysql"]["host"],
+            user=st.secrets["mysql"]["user"],
+            password=st.secrets["mysql"]["password"],
+            database=st.secrets["mysql"]["database"],
+            port=st.secrets["mysql"]["port"]
+        )
+        cursor = conn.cursor()
+        
+        # Verificar o tipo da coluna 'dia'
+        cursor.execute("DESCRIBE bpd")
+        columns = cursor.fetchall()
+        print("\n=== ESTRUTURA DA TABELA BPD ===")
+        for column in columns:
+            if column[0] == 'dia':
+                print(f"Coluna 'dia': {column[1]} ({column[2]})")
+                break
+        
+        # Testar filtros de período
+        today = datetime.now().date()
+        
+        # Teste 1: Últimos 30 dias
+        thirty_days_ago = today - timedelta(days=29)
+        print(f"\n=== TESTE 1: ÚLTIMOS 30 DIAS ===")
+        print(f"Período: {thirty_days_ago} até {today}")
+        
+        cursor.execute("SELECT COUNT(*) FROM bpd WHERE dia BETWEEN %s AND %s", (thirty_days_ago, today))
+        count_30 = cursor.fetchone()[0]
+        print(f"Resultado: {count_30} linhas")
+        
+        if count_30 > 0:
+            cursor.execute("SELECT DISTINCT dia FROM bpd WHERE dia BETWEEN %s AND %s ORDER BY dia DESC LIMIT 5", (thirty_days_ago, today))
+            dates_30 = cursor.fetchall()
+            print("Datas encontradas:")
+            for date in dates_30:
+                print(f"  - {date[0]}")
+        
+        # Teste 2: Última semana
+        end_of_last_week = today - timedelta(days=today.weekday() + 1)
+        start_of_last_week = end_of_last_week - timedelta(days=6)
+        print(f"\n=== TESTE 2: ÚLTIMA SEMANA ===")
+        print(f"Período: {start_of_last_week} até {end_of_last_week}")
+        
+        cursor.execute("SELECT COUNT(*) FROM bpd WHERE dia BETWEEN %s AND %s", (start_of_last_week, end_of_last_week))
+        count_week = cursor.fetchone()[0]
+        print(f"Resultado: {count_week} linhas")
+        
+        if count_week > 0:
+            cursor.execute("SELECT DISTINCT dia FROM bpd WHERE dia BETWEEN %s AND %s ORDER BY dia", (start_of_last_week, end_of_last_week))
+            dates_week = cursor.fetchall()
+            print("Datas encontradas:")
+            for date in dates_week:
+                print(f"  - {date[0]}")
+        
+        # Teste 3: Hoje
+        print(f"\n=== TESTE 3: HOJE ===")
+        print(f"Data: {today}")
+        
+        cursor.execute("SELECT COUNT(*) FROM bpd WHERE dia = %s", (today,))
+        count_today = cursor.fetchone()[0]
+        print(f"Resultado: {count_today} linhas")
+        
+        # Teste 4: Semana atual
+        start_current_week = today - timedelta(days=today.weekday())
+        print(f"\n=== TESTE 4: SEMANA ATUAL ===")
+        print(f"Período: {start_current_week} até {today}")
+        
+        cursor.execute("SELECT COUNT(*) FROM bpd WHERE dia BETWEEN %s AND %s", (start_current_week, today))
+        count_current_week = cursor.fetchone()[0]
+        print(f"Resultado: {count_current_week} linhas")
+        
+        cursor.close()
+    except Exception as e:
+        print(f"Erro ao verificar coluna e testar filtros: {e}")
+    finally:
+        if conn:
+            conn.close()
+
 if __name__ == "__main__":
     test_db_query_and_returned_columns()
+    show_bpd_count_and_sample()
+    check_date_range()
+    check_column_type_and_test_filters()

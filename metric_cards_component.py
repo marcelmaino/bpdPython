@@ -21,31 +21,35 @@ def display_metric_cards(df: pd.DataFrame, selected_currencies: list):
 
     # Calcula os totais das colunas relevantes
     if 'hands' in df.columns:
-        total_hands = df['hands'].sum()
+        # Tratar valores inválidos na coluna hands
+        hands_clean = pd.to_numeric(df['hands'], errors='coerce')
+        total_hands = hands_clean.sum()
     if 'realWins' in df.columns:
-        total_wins_real = df['realWins'].sum()
+        total_wins_real = pd.to_numeric(df['realWins'], errors='coerce').sum()
     if 'dolarWins' in df.columns:
-        total_wins_dolar = df['dolarWins'].sum()
+        total_wins_dolar = pd.to_numeric(df['dolarWins'], errors='coerce').sum()
     if 'realFee' in df.columns:
-        total_fee_real = df['realFee'].sum()
+        total_fee_real = pd.to_numeric(df['realFee'], errors='coerce').sum()
     if 'dolarFee' in df.columns:
-        total_fee_dolar = df['dolarFee'].sum()
+        total_fee_dolar = pd.to_numeric(df['dolarFee'], errors='coerce').sum()
     if 'realRakeback' in df.columns:
-        total_rakeback_real = df['realRakeback'].sum()
+        total_rakeback_real = pd.to_numeric(df['realRakeback'], errors='coerce').sum()
     if 'dolarRakeback' in df.columns:
-        total_rakeback_dolar = df['dolarRakeback'].sum()
+        total_rakeback_dolar = pd.to_numeric(df['dolarRakeback'], errors='coerce').sum()
     if 'realRebate' in df.columns:
-        total_rebate_real = df['realRebate'].sum()
+        total_rebate_real = pd.to_numeric(df['realRebate'], errors='coerce').sum()
     if 'dolarRebate' in df.columns:
-        total_rebate_dolar = df['dolarRebate'].sum()
+        total_rebate_dolar = pd.to_numeric(df['dolarRebate'], errors='coerce').sum()
 
     # --- Cards de Métricas ---
     col1, col2, col3, col4, col5 = st.columns(5)
 
     with col1:
+        # Tratar caso onde total_hands pode ser NaN
+        hands_display = int(total_hands) if pd.notna(total_hands) else 0
         st.metric(
             label="Total de Mãos Jogadas",
-            value=f"{int(total_hands):,}",
+            value=f"{hands_display:,}",
             help="Número total de mãos jogadas."
         )
 
@@ -58,10 +62,10 @@ def display_metric_cards(df: pd.DataFrame, selected_currencies: list):
             wins_label = "Ganhos (R$ + US$)"
             formatted_wins = f"R$ {total_wins_real:,.2f} + US$ {total_wins_dolar:,.2f}"
         elif "Real (R$)" in selected_currencies:
-            wins_value = total_wins_real
+            wins_value = total_wins_real if pd.notna(total_wins_real) else 0
             formatted_wins = f"R$ {wins_value:,.2f}"
         elif "Dólar (US$)" in selected_currencies:
-            wins_value = total_wins_dolar
+            wins_value = total_wins_dolar if pd.notna(total_wins_dolar) else 0
             formatted_wins = f"US$ {wins_value:,.2f}"
         else:
             formatted_wins = "N/A"
@@ -82,10 +86,10 @@ def display_metric_cards(df: pd.DataFrame, selected_currencies: list):
             rakeback_label = "Rakeback (R$ + US$)"
             formatted_rakeback = f"R$ {total_rakeback_real:,.2f} + US$ {total_rakeback_dolar:,.2f}"
         elif "Real (R$)" in selected_currencies:
-            rakeback_value = total_rakeback_real
+            rakeback_value = total_rakeback_real if pd.notna(total_rakeback_real) else 0
             formatted_rakeback = f"R$ {rakeback_value:,.2f}"
         elif "Dólar (US$)" in selected_currencies:
-            rakeback_value = total_rakeback_dolar
+            rakeback_value = total_rakeback_dolar if pd.notna(total_rakeback_dolar) else 0
             formatted_rakeback = f"US$ {rakeback_value:,.2f}"
         else:
             formatted_rakeback = "N/A"
@@ -106,10 +110,10 @@ def display_metric_cards(df: pd.DataFrame, selected_currencies: list):
             rebate_label = "Rebate (R$ + US$)"
             formatted_rebate = f"R$ {total_rebate_real:,.2f} + US$ {total_rebate_dolar:,.2f}"
         elif "Real (R$)" in selected_currencies:
-            rebate_value = total_rebate_real
+            rebate_value = total_rebate_real if pd.notna(total_rebate_real) else 0
             formatted_rebate = f"R$ {rebate_value:,.2f}"
         elif "Dólar (US$)" in selected_currencies:
-            rebate_value = total_rebate_dolar
+            rebate_value = total_rebate_dolar if pd.notna(total_rebate_dolar) else 0
             formatted_rebate = f"US$ {rebate_value:,.2f}"
         else:
             formatted_rebate = "N/A"

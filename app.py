@@ -260,6 +260,16 @@ def show_main_dashboard():
             start_date = None
             end_date = None
 
+        # Diagnóstico detalhado das datas
+        print(f"\n=== DIAGNÓSTICO DETALHADO DE DATAS ===")
+        print(f"Opção selecionada: {date_range_option}")
+        print(f"Data de hoje (sistema): {today}")
+        print(f"Data de início calculada: {start_date}")
+        print(f"Data de fim calculada: {end_date}")
+        print(f"Tipo de start_date: {type(start_date)}")
+        print(f"Tipo de end_date: {type(end_date)}")
+        print("=====================================\n")
+
         st.session_state['start_date'] = start_date
         st.session_state['end_date'] = end_date
 
@@ -322,10 +332,29 @@ def show_main_dashboard():
     if selected_option == "Dashboard":
         with st.spinner("Carregando informações do banco de dados..."):
             df_full = load_data(st.session_state['username'], st.session_state['user_role'], st.session_state['start_date'], st.session_state['end_date'])
-            
+
+            # Diagnóstico: prints no console
+            print("\n=== DIAGNÓSTICO DASHBOARD ===")
+            print(f"Usuário logado: {st.session_state['username']}")
+            print(f"Papel: {st.session_state['user_role']}")
+            print(f"Período: {st.session_state['start_date']} até {st.session_state['end_date']}")
+            print(f"Linhas carregadas do banco: {len(df_full)}")
+            print(f"Colunas: {list(df_full.columns)}")
+            print("Primeiras linhas:")
+            print(df_full.head())
+            print("============================\n")
+
             # Aplicar filtros avançados primeiro
             with st.expander("Filtros Avançados", expanded=False):
                 df_filtered_by_controls = display_filters(df_full)
+            
+            # Diagnóstico dos dados antes da exibição
+            print(f"\n=== DIAGNÓSTICO ANTES DA EXIBIÇÃO ===")
+            print(f"Dados após filtros avançados: {len(df_filtered_by_controls)} linhas")
+            if not df_filtered_by_controls.empty:
+                print("Primeiras 3 linhas dos dados filtrados:")
+                print(df_filtered_by_controls[['dia', 'playerName', 'reference']].head(3))
+            print("=====================================\n")
             
             # Exibir métricas com base nos dados filtrados
             display_metric_cards(df_filtered_by_controls, st.session_state['selected_currencies'])
