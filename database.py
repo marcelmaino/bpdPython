@@ -20,6 +20,57 @@ def get_db_connection():
         st.error(f"Erro ao conectar ao banco de dados: {e}")
         return None
 
+def get_date_range():
+    """
+    Retorna as datas mínima e máxima dos dados no banco.
+    """
+    conn = get_db_connection()
+    if conn:
+        try:
+            query = "SELECT MIN(dia) as min_date, MAX(dia) as max_date FROM bpd WHERE dia IS NOT NULL AND dia != '' AND dia != '-'"
+            df = pd.read_sql(query, conn)
+            
+            min_date = None
+            max_date = None
+            
+            # Processar data mínima
+            if not df.empty and df['min_date'].iloc[0] is not None:
+                min_date_str = str(df['min_date'].iloc[0]).strip()
+                if min_date_str and min_date_str != '-' and min_date_str != 'None':
+                    try:
+                        # Assumir formato YYYY-MM-DD
+                        min_date = pd.to_datetime(min_date_str, format='%Y-%m-%d').date()
+                    except:
+                        # Fallback: tentar parsing automático
+                        min_date = pd.to_datetime(min_date_str, errors='coerce')
+                        if pd.notna(min_date):
+                            min_date = min_date.date()
+                        else:
+                            min_date = None
+            
+            # Processar data máxima
+            if not df.empty and df['max_date'].iloc[0] is not None:
+                max_date_str = str(df['max_date'].iloc[0]).strip()
+                if max_date_str and max_date_str != '-' and max_date_str != 'None':
+                    try:
+                        # Assumir formato YYYY-MM-DD
+                        max_date = pd.to_datetime(max_date_str, format='%Y-%m-%d').date()
+                    except:
+                        # Fallback: tentar parsing automático
+                        max_date = pd.to_datetime(max_date_str, errors='coerce')
+                        if pd.notna(max_date):
+                            max_date = max_date.date()
+                        else:
+                            max_date = None
+            
+            return min_date, max_date
+        except Exception as e:
+            st.error(f"Erro ao buscar range de datas: {e}")
+            return None, None
+        finally:
+            conn.close()
+    return None, None
+
 # @st.cache_data(ttl=3600) # Cache por 1 hora - Temporariamente desativado para depuração
 def load_data(username: str = None, user_role: str = None, start_date: date = None, end_date: date = None):
     """
@@ -53,9 +104,12 @@ def load_data(username: str = None, user_role: str = None, start_date: date = No
                 print(f"DEBUG: Filtrando por período - {start_date} até {end_date}")
                 print(f"DEBUG: Tipos - start_date: {type(start_date)}, end_date: {type(end_date)}")
                 where_clauses.append(" dia BETWEEN %s AND %s")
-                params.append(start_date)
-                params.append(end_date)
-                print(f"DEBUG: Parâmetros da query: {params}")
+                # Converter datetime.date para string no formato YYYY-MM-DD
+                start_date_str = start_date.strftime('%Y-%m-%d') if hasattr(start_date, 'strftime') else str(start_date)
+                end_date_str = end_date.strftime('%Y-%m-%d') if hasattr(end_date, 'strftime') else str(end_date)
+                params.append(start_date_str)
+                params.append(end_date_str)
+                print(f"DEBUG: Parâmetros da query (convertidos): {params}")
 
             if where_clauses:
                 query += " WHERE " + " AND ".join(where_clauses)

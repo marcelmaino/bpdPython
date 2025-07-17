@@ -4,7 +4,7 @@ import os
 import pandas as pd
 
 __version__ = "1.0.0" # Versão inicial do aplicativo
-from database import load_data, get_db_connection, load_all_users, load_user_config
+from database import load_data, get_db_connection, load_all_users, load_user_config, get_date_range
 from auth import generate_users, verify_login
 from datetime import datetime, timedelta
 from table_component import display_full_table
@@ -279,21 +279,27 @@ def show_main_dashboard():
 
         # 4. LÓGICA DE DATAS
         today = datetime.now().date()
+        
+        # Buscar a data máxima dos dados para usar como referência
+        _, max_date_db = get_date_range()
+        reference_date = max_date_db if max_date_db else today
+        
         start_date, end_date = None, None
 
         if date_range_option == "Semana Atual":
-            start_date = today - timedelta(days=today.weekday())
-            end_date = today
+            start_date = reference_date - timedelta(days=reference_date.weekday())
+            end_date = reference_date
         elif date_range_option == "Hoje":
+            # Para "Hoje", sempre usar a data atual do sistema, não a data máxima do banco
             start_date = today
             end_date = today
         elif date_range_option == "Última semana":
-            end_of_last_week = today - timedelta(days=today.weekday() + 1)
+            end_of_last_week = reference_date - timedelta(days=reference_date.weekday() + 1)
             start_date = end_of_last_week - timedelta(days=6)
             end_date = end_of_last_week
         elif date_range_option == "Últimos 30 dias":
-            start_date = today - timedelta(days=29)
-            end_date = today
+            start_date = reference_date - timedelta(days=29)
+            end_date = reference_date
         elif date_range_option == "Mostrar tudo":
             start_date = None
             end_date = None
@@ -302,6 +308,8 @@ def show_main_dashboard():
         print(f"\n=== DIAGNÓSTICO DETALHADO DE DATAS ===")
         print(f"Opção selecionada: {date_range_option}")
         print(f"Data de hoje (sistema): {today}")
+        print(f"Data máxima no banco: {max_date_db}")
+        print(f"Data de referência usada: {reference_date}")
         print(f"Data de início calculada: {start_date}")
         print(f"Data de fim calculada: {end_date}")
         print(f"Tipo de start_date: {type(start_date)}")

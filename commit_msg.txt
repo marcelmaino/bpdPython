@@ -1,1 +1,0 @@
-Remove arquivos sensíveis do rastreamento Git e adiciona ao .gitignore
