@@ -11,11 +11,15 @@ from table_component import display_full_table
 from filter_component import display_filters
 from metric_cards_component import display_metric_cards
 from config_page import display_config_page
+from utils import insert_google_analytics
 
 
 
 # Configuração inicial da página
 st.set_page_config(layout="wide", page_title="BPD - Sistema de Gestão")
+
+# Insere o código do Google Analytics
+insert_google_analytics()
 
 # Carrega o CSS externo
 with open("style.css") as f:
