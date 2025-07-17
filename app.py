@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit_shadcn_ui as ui
 import os
 import pandas as pd
 
@@ -11,7 +12,7 @@ from filter_component import display_filters
 from metric_cards_component import display_metric_cards
 from config_page import display_config_page
 
-from streamlit_option_menu import option_menu
+
 
 # Configuração inicial da página
 st.set_page_config(layout="wide", page_title="BPD - Sistema de Gestão")
@@ -128,23 +129,56 @@ def display_users_page():
         role_filter = "Admin" if st.session_state['users_search_role'] == "Admin" else "Jogador"
         filtered_df = filtered_df[filtered_df['role'] == role_filter]
     
-    # Estatísticas
+    # Estatísticas com Cards Modernos
     col_stats1, col_stats2, col_stats3, col_stats4 = st.columns(4)
     
     with col_stats1:
-        st.metric("Total de Usuários", len(users_df))
+        total_users = len(users_df)
+        st.markdown(f'''
+        <div class="metric-card-improved">
+            <div class="metric-content">
+                <div class="metric-label">Total de Usuários</div>
+                <div class="metric-value">{total_users}</div>
+                <div class="metric-description">Usuários cadastrados no sistema</div>
+            </div>
+        </div>
+        ''', unsafe_allow_html=True)
     
     with col_stats2:
         admin_count = len(users_df[users_df['role'] == 'Admin'])
-        st.metric("Administradores", admin_count)
+        st.markdown(f'''
+        <div class="metric-card-improved">
+            <div class="metric-content">
+                <div class="metric-label">Administradores</div>
+                <div class="metric-value">{admin_count}</div>
+                <div class="metric-description">Usuários com privilégios admin</div>
+            </div>
+        </div>
+        ''', unsafe_allow_html=True)
     
     with col_stats3:
         player_count = len(users_df[users_df['role'] == 'Jogador'])
-        st.metric("Jogadores", player_count)
+        st.markdown(f'''
+        <div class="metric-card-improved">
+            <div class="metric-content">
+                <div class="metric-label">Jogadores</div>
+                <div class="metric-value">{player_count}</div>
+                <div class="metric-description">Usuários jogadores</div>
+            </div>
+        </div>
+        ''', unsafe_allow_html=True)
     
     with col_stats4:
         filtered_count = len(filtered_df)
-        st.metric("Resultados", filtered_count)
+        st.markdown(f'''
+        <div class="metric-card-improved">
+            <div class="metric-content">
+                <div class="metric-label">Resultados</div>
+                <div class="metric-value">{filtered_count}</div>
+                <div class="metric-description">Usuários encontrados</div>
+            </div>
+        </div>
+        ''', unsafe_allow_html=True)
     
     # Tabela de usuários
     st.markdown("### 📋 Lista de Usuários")
@@ -290,43 +324,64 @@ def show_main_dashboard():
 
     # st.markdown("---") # Separador visual
 
-    # --- Sidebar ---
+    # --- Menu Lateral Simples e Limpo ---
     with st.sidebar:
-        # Definição das opções do menu
+        # Inicializar selected_option se não existir
+        if 'selected_option' not in st.session_state:
+            st.session_state['selected_option'] = "Dashboard"
+        
+        selected_option = st.session_state['selected_option']
+        
+        # CSS personalizado para os botões do menu
+        st.markdown("""
+        <style>
+        div[data-testid="stButton"] > button {
+            background: transparent !important;
+            border: none !important;
+            text-align: left !important;
+            padding: 6px 12px !important;
+            margin: 2px 0 !important;
+            border-radius: 6px !important;
+            transition: background-color 0.2s ease !important;
+            width: 100% !important;
+            justify-content: flex-start !important;
+            font-size: 12px !important;
+            font-weight: 400 !important;
+        }
+        div[data-testid="stButton"] > button:hover {
+            background-color: #f0f2f6 !important;
+        }
+        div[data-testid="stButton"] > button[kind="primary"] {
+            background-color: #e6f3ff !important;
+            color: #0273a4 !important;
+            font-weight: 500 !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        
+        # Menu para Admin
         if st.session_state['user_role'] == 'Admin':
-            menu_options_list = [
-                "Dashboard",
-                "Usuários",
-                "Configurações"
-            ]
-            menu_icons_list = [
-                "house",
-                "people",
-                "gear"
-            ]
-        else:  # player
-            menu_options_list = [
-                "Dashboard",
-                "Configurações"
-            ]
-            menu_icons_list = [
-                "house",
-                "gear"
-            ]
-
-        selected_option = option_menu(
-            menu_title=None,  # Esconde o título do menu
-            options=menu_options_list,
-            icons=menu_icons_list,
-            menu_icon="cast",  # Ícone do menu principal
-            default_index=0,  # Opção padrão selecionada
-            styles={
-                "container": {"padding": "0!important", "background-color": "#fafafa"},
-                "icon": {"color": "#0273a4", "font-size": "16px"},
-                "nav-link": {"font-size": "12px", "text-align": "left", "margin": "0px", "--hover-color": "#eee"},
-                "nav-link-selected": {"background-color": "#0273a4", "color": "white"},
-            }
-        )
+            if st.button("Dashboard", use_container_width=True, type="primary" if selected_option == "Dashboard" else "secondary"):
+                st.session_state['selected_option'] = "Dashboard"
+                st.rerun()
+            
+            if st.button("Usuários", use_container_width=True, type="primary" if selected_option == "Usuários" else "secondary"):
+                st.session_state['selected_option'] = "Usuários"
+                st.rerun()
+            
+            if st.button("Configurações", use_container_width=True, type="primary" if selected_option == "Configurações" else "secondary"):
+                st.session_state['selected_option'] = "Configurações"
+                st.rerun()
+        
+        # Menu para Player
+        else:
+            if st.button("Dashboard", use_container_width=True, type="primary" if selected_option == "Dashboard" else "secondary"):
+                st.session_state['selected_option'] = "Dashboard"
+                st.rerun()
+            
+            if st.button("Configurações", use_container_width=True, type="primary" if selected_option == "Configurações" else "secondary"):
+                st.session_state['selected_option'] = "Configurações"
+                st.rerun()
 
     # --- Conteúdo principal conforme seleção ---
     if selected_option == "Dashboard":
@@ -358,7 +413,7 @@ def show_main_dashboard():
             
             # Exibir métricas com base nos dados filtrados
             display_metric_cards(df_filtered_by_controls, st.session_state['selected_currencies'])
-            
+
             # Exibir tabela com dados filtrados
             display_full_table(df_filtered_by_controls, st.session_state['user_role'])
     elif selected_option == "Usuários":

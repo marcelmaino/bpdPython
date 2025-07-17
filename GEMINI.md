@@ -5,6 +5,7 @@ Este arquivo registra definições e decisões importantes tomadas durante a int
 ## Sumário
 
 - [Definições](#definições)
+- [Notas do Projeto](#notas-do-projeto)
 
 ---
 
@@ -12,3 +13,8 @@ Este arquivo registra definições e decisões importantes tomadas durante a int
 
 - **Idioma da Conversa**: Todas as interações neste chat serão conduzidas exclusivamente em português.
 
+---
+
+## Notas do Projeto
+
+- Para iniciar o projeto, execute o seguinte comando em um terminal separado: `venv\Scripts\streamlit.exe run app.py`

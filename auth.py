@@ -12,7 +12,7 @@ def generate_users(player_names, agent_names):
     if users_df.empty:
         # Fallback: cria usuário admin estático se não conseguir carregar do banco
         users_data = [{'username': 'admin', 'password': '123', 'role': 'Admin'}]
-        return pd.DataFrame(users_data)
+    return pd.DataFrame(users_data)
     
     return users_df
 

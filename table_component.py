@@ -255,8 +255,8 @@ def display_full_table(df: pd.DataFrame, user_role: str):
                 st.session_state['current_page'] = total_pages
                 st.rerun()
 
-    # --- Totais das Colunas Mensuráveis ---
-    st.markdown("### Totais")
+    # --- Totais das Colunas Mensuráveis com Cards Modernos ---
+    st.markdown("### 📊 Totais")
     
     # Filtra as colunas mensuráveis que estão presentes no df_display e são numéricas
     columns_to_sum = [col for col in measurable_columns if col in df_display.columns and pd.api.types.is_numeric_dtype(df_display[col])]
@@ -287,7 +287,7 @@ def display_full_table(df: pd.DataFrame, user_role: str):
                     print(f"  Contagem de NaN: {df_paginated[col_name].isna().sum()}")
                     print(f"  Contagem de valores válidos: {df_paginated[col_name].notna().sum()}")
                     
-                    # Formatação para valores monetários (exemplo simples)
+                    # Formatação para valores monetários
                     try:
                         if pd.isna(total_value) or total_value is None:
                             formatted_value = "N/A"
@@ -300,8 +300,23 @@ def display_full_table(df: pd.DataFrame, user_role: str):
                     except (ValueError, TypeError):
                         formatted_value = "N/A"
 
+                    # Determinar cor baseado no valor (para valores monetários)
+                    card_class = "metric-card-improved"
+                    if 'wins' in col_name.lower() and total_value > 0:
+                        card_class = "metric-card-improved positive"
+                    elif 'fee' in col_name.lower() and total_value < 0:
+                        card_class = "metric-card-improved negative"
+
                     with current_cols[j]:
-                        st.metric(label=col_name, value=formatted_value)
+                        st.markdown(f'''
+                        <div class="{card_class}">
+                            <div class="metric-content">
+                                <div class="metric-label">{col_name}</div>
+                                <div class="metric-value">{formatted_value}</div>
+                                <div class="metric-description">Total da página atual</div>
+                            </div>
+                        </div>
+                        ''', unsafe_allow_html=True)
         
         # Seção de totais gerais (apenas se houver paginação)
         if st.session_state.get('page_size') != "Todas" and total_pages > 1:
@@ -316,7 +331,7 @@ def display_full_table(df: pd.DataFrame, user_role: str):
                         # Calcula o total de todos os dados filtrados
                         total_value = df_display[col_name].sum()
                         
-                        # Formatação para valores monetários (exemplo simples)
+                        # Formatação para valores monetários
                         try:
                             if pd.isna(total_value) or total_value is None:
                                 formatted_value = "N/A"
@@ -329,7 +344,22 @@ def display_full_table(df: pd.DataFrame, user_role: str):
                         except (ValueError, TypeError):
                             formatted_value = "N/A"
 
+                        # Determinar cor baseado no valor (para valores monetários)
+                        card_class = "metric-card-improved"
+                        if 'wins' in col_name.lower() and total_value > 0:
+                            card_class = "metric-card-improved positive"
+                        elif 'fee' in col_name.lower() and total_value < 0:
+                            card_class = "metric-card-improved negative"
+
                         with current_cols[j]:
-                            st.metric(label=col_name, value=formatted_value, delta=None)
+                            st.markdown(f'''
+                            <div class="{card_class}">
+                                <div class="metric-content">
+                                    <div class="metric-label">{col_name}</div>
+                                    <div class="metric-value">{formatted_value}</div>
+                                    <div class="metric-description">Total geral filtrado</div>
+                                </div>
+                            </div>
+                            ''', unsafe_allow_html=True)
     else:
         st.info("Nenhuma coluna mensurável selecionada para exibir totais.")

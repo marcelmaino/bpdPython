@@ -5,3 +5,5 @@ numpy
 mysql-connector-repackaged
 openpyxl
 streamlit-option-menu
+streamlit-shadcn-ui
+streamlit-on-Hover-tabs

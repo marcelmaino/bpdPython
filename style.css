@@ -209,4 +209,183 @@ div[data-testid="stDataFrame"] {
     border: 1px solid #333333;
 } */
 
+.metric-card-container {
+    background-color: #ffffff;
+    border-radius: 10px;
+    border: 1px solid #e0e0e0;
+    padding: 15px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.metric-card-container h3 {
+    font-size: 1.1rem;
+    color: #333333;
+    margin-bottom: 5px;
+}
+
+.metric-card-container .stMetric {
+    padding: 0;
+    border: none;
+    background: none;
+}
+
+.metric-card-container .stMetric div div {
+    font-size: 1.8rem !important;
+    font-weight: 700 !important;
+    color: #0273a4;
+}
+
+.metric-card-container .stMetric p {
+    font-size: 0.9rem !important;
+    color: #666666;
+}
+
+/* --- Estilos para os Cards Melhorados --- */
+.metric-card-improved {
+    background-color: #ffffff !important;
+    border: 1px solid #e0e0e0 !important;
+    border-radius: 12px !important;
+    padding: 20px !important;
+    margin-bottom: 15px !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05) !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    min-height: 120px !important;
+}
+
+.metric-card-improved:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.metric-card-improved .metric-content {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 5px !important;
+}
+
+.metric-card-improved .metric-value {
+    font-size: 1.6rem !important;
+    font-weight: 700 !important;
+    color: #0273a4 !important;
+    line-height: 1.2 !important;
+}
+
+.metric-card-improved .metric-label {
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    color: #333333 !important;
+    line-height: 1.2 !important;
+}
+
+.metric-card-improved .metric-description {
+    font-size: 0.75rem !important;
+    color: #666666 !important;
+    line-height: 1.3 !important;
+}
+
+/* Variantes para cards positivos e negativos */
+.metric-card-improved.positive .metric-value {
+    color: #10b981 !important;
+}
+
+.metric-card-improved.negative .metric-value {
+    color: #ef4444 !important;
+}
+
+/* --- Estilos para os cards do shadcn-ui --- */
+/* Estilos específicos para os iframes do shadcn-ui */
+iframe[data-testid*="metric_card"] {
+    background-color: #f5f7fa !important;
+}
+
+/* Estilos para containers dos cards do shadcn-ui */
+div[data-testid*="metric_card"] {
+    background-color: #f5f7fa !important;
+    border: 1px solid #e0e0e0 !important;
+    border-radius: 10px !important;
+    padding: 15px !important;
+    margin-bottom: 10px !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Estilos para elementos dentro dos cards do shadcn-ui */
+div[data-testid*="metric_card"] > div {
+    background-color: #f5f7fa !important;
+}
+
+/* Estilos para qualquer div que contenha "metric_card" no data-testid */
+div[data-testid*="metric_card"] div {
+    background-color: #f5f7fa !important;
+}
+
+/* Estilos para elementos com fundo branco que precisam ser alterados */
+div[style*="background-color: white"],
+div[style*="background-color: #fff"],
+div[style*="background-color: #ffffff"] {
+    background-color: #f5f7fa !important;
+}
+
+/* Estilos para elementos com fundo branco usando background */
+div[style*="background: white"],
+div[style*="background: #fff"],
+div[style*="background: #ffffff"] {
+    background: #f5f7fa !important;
+}
+
+
+
+/* Estilos para elementos específicos do shadcn-ui */
+div[data-testid*="stIframe"] {
+    background-color: #f5f7fa !important;
+}
+
+/* Estilos para tornar o body e html dos iframes transparentes */
+iframe body,
+iframe html {
+    background-color: transparent !important;
+}
+
+/* Estilos para elementos que podem estar dentro de iframes */
+iframe div {
+    background-color: #f5f7fa !important;
+}
+
+/* Estilos para elementos com classes específicas do shadcn-ui 
+div[class*="shadcn"],
+div[class*="Shadcn"],
+div[class*="ui"],
+div[class*="UI"] {
+    background-color: #f5f7fa !important;
+}
+*/
+
+/* Estilos mais específicos para o shadcn-ui */
+div[data-testid*="metric_card"] {
+    background: #ffffff !important;
+    border: 1px solid #e0e0e0 !important;
+    border-radius: 10px !important;
+    padding: 15px !important;
+    margin-bottom: 10px !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Estilos para elementos que podem ter fundo branco por padrão 
+div[class*="card"],
+div[class*="Card"],
+div[class*="metric"],
+div[class*="Metric"] {
+    background-color: #f5f7fa !important;
+}
+*/
+
+
+
+
+
+
+
 

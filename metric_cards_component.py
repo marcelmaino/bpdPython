@@ -90,24 +90,29 @@ def display_metric_cards(df: pd.DataFrame, selected_currencies: list):
     
     print("=============================\n")
 
-    # --- Cards de Métricas ---
+    # --- Cards de Métricas Melhorados ---
     col1, col2, col3, col4, col5 = st.columns(5)
 
+    # Card 1: Total de Mãos Jogadas
     with col1:
-        # Tratar caso onde total_hands pode ser NaN
         hands_display = int(total_hands) if pd.notna(total_hands) else 0
-        st.metric(
-            label="Total de Mãos Jogadas",
-            value=f"{hands_display:,}",
-            help="Número total de mãos jogadas."
-        )
+        with st.container():
+            st.markdown(f'''
+            <div class="metric-card-improved">
+                <div class="metric-content">
+                    <div class="metric-label">Total de Mãos Jogadas</div>
+                    <div class="metric-value">{hands_display:,}</div>
+                    <div class="metric-description">Número total de mãos jogadas</div>
+                </div>
+            </div>
+            ''', unsafe_allow_html=True)
 
-    # Ganhos
+    # Card 2: Ganhos
     with col2:
         wins_value = 0
         wins_label = "Ganhos"
         if "Real (R$)" in selected_currencies and "Dólar (US$)" in selected_currencies:
-            wins_value = total_wins_real + total_wins_dolar # Assumindo soma direta para exibição
+            wins_value = total_wins_real + total_wins_dolar
             wins_label = "Ganhos (R$ + US$)"
             formatted_wins = f"R$ {total_wins_real:,.2f} + US$ {total_wins_dolar:,.2f}"
         elif "Real (R$)" in selected_currencies:
@@ -119,17 +124,20 @@ def display_metric_cards(df: pd.DataFrame, selected_currencies: list):
         else:
             formatted_wins = "N/A"
 
-        # Diagnóstico da exibição de ganhos
         print(f"DEBUG GANHOS: wins_value={wins_value}, formatted_wins='{formatted_wins}'")
 
-        st.metric(
-            label=wins_label,
-            value=formatted_wins,
-            delta_color="off", # Cor verde padrão para ganhos
-            help="Total de ganhos nas moedas selecionadas."
-        )
+        with st.container():
+            st.markdown(f'''
+            <div class="metric-card-improved">
+                <div class="metric-content">
+                    <div class="metric-label">{wins_label}</div>
+                    <div class="metric-value">{formatted_wins}</div>
+                    <div class="metric-description">Total de ganhos nas moedas selecionadas</div>
+                </div>
+            </div>
+            ''', unsafe_allow_html=True)
 
-    # Rakeback
+    # Card 3: Rakeback
     with col3:
         rakeback_value = 0
         rakeback_label = "Total de Rakeback"
@@ -146,17 +154,20 @@ def display_metric_cards(df: pd.DataFrame, selected_currencies: list):
         else:
             formatted_rakeback = "N/A"
 
-        # Diagnóstico da exibição de rakeback
         print(f"DEBUG RAKEBACK: rakeback_value={rakeback_value}, formatted_rakeback='{formatted_rakeback}'")
 
-        st.metric(
-            label=rakeback_label,
-            value=formatted_rakeback,
-            delta_color="off", # Cor roxa padrão para rakeback
-            help="Total de rakeback nas moedas selecionadas."
-        )
+        with st.container():
+            st.markdown(f'''
+            <div class="metric-card-improved">
+                <div class="metric-content">
+                    <div class="metric-label">{rakeback_label}</div>
+                    <div class="metric-value">{formatted_rakeback}</div>
+                    <div class="metric-description">Total de rakeback nas moedas selecionadas</div>
+                </div>
+            </div>
+            ''', unsafe_allow_html=True)
 
-    # Rebate
+    # Card 4: Rebate
     with col4:
         rebate_value = 0
         rebate_label = "Total de Rebate"
@@ -173,14 +184,18 @@ def display_metric_cards(df: pd.DataFrame, selected_currencies: list):
         else:
             formatted_rebate = "N/A"
 
-        st.metric(
-            label=rebate_label,
-            value=formatted_rebate,
-            delta_color="off", # Cor roxa padrão para rebate
-            help="Total de rebate nas moedas selecionadas."
-        )
+        with st.container():
+            st.markdown(f'''
+            <div class="metric-card-improved">
+                <div class="metric-content">
+                    <div class="metric-label">{rebate_label}</div>
+                    <div class="metric-value">{formatted_rebate}</div>
+                    <div class="metric-description">Total de rebate nas moedas selecionadas</div>
+                </div>
+            </div>
+            ''', unsafe_allow_html=True)
 
-    # Balanço Final
+    # Card 5: Balanço Final
     with col5:
         final_balance_value = 0
         final_balance_label = "Balanço Final"
@@ -198,10 +213,19 @@ def display_metric_cards(df: pd.DataFrame, selected_currencies: list):
         else:
             formatted_balance = "N/A"
 
-        delta_color = "normal" if final_balance_value >= 0 else "inverse"
-        st.metric(
-            label=final_balance_label,
-            value=formatted_balance,
-            delta_color=delta_color,
-            help="Balanço final (Ganhos - Taxas + Rakeback) nas moedas selecionadas."
-        )
+        # Determinar cor baseado no valor
+        if final_balance_value >= 0:
+            card_class = "metric-card-improved positive"
+        else:
+            card_class = "metric-card-improved negative"
+
+        with st.container():
+            st.markdown(f'''
+            <div class="{card_class}">
+                <div class="metric-content">
+                    <div class="metric-label">{final_balance_label}</div>
+                    <div class="metric-value">{formatted_balance}</div>
+                    <div class="metric-description">Balanço final (Ganhos - Taxas + Rakeback)</div>
+                </div>
+            </div>
+            ''', unsafe_allow_html=True)
